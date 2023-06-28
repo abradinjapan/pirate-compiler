@@ -1,0 +1,15 @@
+Abstracting is determining the relationship between parts of syntax.
+
+How to verify program semantics?
+
+Collect data and verify integrity in stages.
+    - Collect all abstraction headers.
+        - If name and IO counts are found in duplicates, reject verification.
+    - Verify all statements in every abstraction adhere to all abstraction headers.
+        - Any statements that are not matched to a header, reject verification.
+    - Verify all variables in every abstraction.
+        - If a variable is used before it is declared, reject verification.
+        - If a variable is redeclared as an input or output, reject verification.
+    - Verify all offsets in every abstraction.
+        - If an offset is declared more than once, reject verification.
+        - If an offset is undeclared but used, reject verification.

@@ -1,0 +1,9 @@
+sail()() {
+    @function.start
+
+    pirate.write_cell(integer.100)(a)
+
+    pirate.print_cell_as_number(a)()
+
+    pirate.quit(@function.end)()
+}
