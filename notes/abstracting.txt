@@ -13,3 +13,4 @@ Collect data and verify integrity in stages.
     - Verify all offsets in every abstraction.
         - If an offset is declared more than once, reject verification.
         - If an offset is undeclared but used, reject verification.
+    - Get cell types.

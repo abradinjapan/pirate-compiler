@@ -46,6 +46,7 @@ namespace runner {
         get_input,
         pass_output,
         get_output,
+        jump_to,
     };
 
     class instruction {
@@ -209,6 +210,18 @@ namespace runner {
         program.p_instructions.push_back(temp_instruction);
     }
 
+    // add jump to instruction to program (jumps to the instruction in the program array specified in 'source')
+    void append__jump_to(program& program, cell_ID source) {
+        instruction temp_instruction = instruction();
+
+        // setup instruction parameters
+        temp_instruction.p_type = instruction_type::jump_to;
+        temp_instruction.p_input_0 = source;
+
+        // create new instruction
+        program.p_instructions.push_back(temp_instruction);
+    }
+
     // run a program
     buffer run_program(program program, bool& error_occured) {
         buffer output;
@@ -320,6 +333,11 @@ namespace runner {
 
                 // next instruction
                 current_instruction++;
+
+                break;
+            case instruction_type::jump_to:
+                // jump
+                current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
 
                 break;
             default:

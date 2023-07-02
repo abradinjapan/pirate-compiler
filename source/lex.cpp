@@ -58,7 +58,7 @@ namespace lexer {
     }
 
     // lex string
-    lexlings lex(std::string user_code) {
+    lexlings lex(std::string user_code, bool& error_occured) {
         lexlings output;
         unsigned int index;
         int length;
@@ -127,7 +127,11 @@ namespace lexer {
                     index++;
                 // no lexling found, error
                 } else {
+                    // inform user of failure
                     std::cout << "Lexical Error!" << std::endl;
+
+                    // set error
+                    error_occured = true;
 
                     // quit
                     return output;

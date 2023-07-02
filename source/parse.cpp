@@ -6,7 +6,8 @@
 namespace parser {
     enum name_type {
         is_uninitialized,
-        is_value_name, // is the same for variables and numeral literals
+        is_value_name,
+        is_integer_literal,
         is_abstraction_name,
         is_offset,
     };
@@ -71,6 +72,25 @@ namespace parser {
         std::vector<abstraction> p_abstractions;
     };
 
+    bool string_starts_with(std::string& string, std::string starts_with) {
+        // check if length of start with is less than length of string
+        if (string.length() <= starts_with.length()) {
+            return false;
+        }
+
+        // check each character
+        for (uint64_t i = 0; i < starts_with.length(); i++) {
+            // check if character is invalid
+            if (starts_with[i] != string[i]) {
+                // not a match
+                return false;
+            }
+        }
+
+        // match found
+        return true;
+    }
+
     // parse arguments
     std::vector<name> parse_arguments(lexer::lexlings& lexlings, int& lexling_index, bool& error_occured) {
         std::vector<name> output;
@@ -82,19 +102,27 @@ namespace parser {
 
             // get arguments until end of arguments
             while (lexling_index < lexlings.count()) {
-                // get named arguments
-                if (lexlings.p_lexlings[lexling_index].p_type == lexer::type::name) {
-                    // add argument
-                    output.push_back(name(name_type::is_value_name, lexlings.p_lexlings[lexling_index].p_value));
-
-                    // next lexling
-                    lexling_index++;
-                } else if (lexlings.p_lexlings[lexling_index].p_type == lexer::type::offset_marker && lexlings.p_lexlings[lexling_index + 1].p_type == lexer::type::name) {
+                // check for offset
+                if (lexlings.p_lexlings[lexling_index].p_type == lexer::type::offset_marker && lexlings.p_lexlings[lexling_index + 1].p_type == lexer::type::name) {
                     // add argument
                     output.push_back(name(name_type::is_offset, lexlings.p_lexlings[lexling_index + 1].p_value));
 
                     // next lexling
                     lexling_index += 2;
+                // check for integer literal
+                } else if (string_starts_with(lexlings.p_lexlings[lexling_index].p_value, "pirate.integer.") == true) {
+                    // add argument
+                    output.push_back(name(name_type::is_integer_literal, lexlings.p_lexlings[lexling_index].p_value));
+
+                    // next argument
+                    lexling_index++;
+                // check for name
+                } else if (lexlings.p_lexlings[lexling_index].p_type == lexer::type::name) {
+                    // add argument
+                    output.push_back(name(name_type::is_value_name, lexlings.p_lexlings[lexling_index].p_value));
+
+                    // next lexling
+                    lexling_index++;
                 // invalid argument lexling, quit loop
                 } else {
                     break;
@@ -235,6 +263,9 @@ namespace parser {
             case name_type::is_value_name:
                 std::cout << "value_name";
                 break;
+            case name_type::is_integer_literal:
+                std::cout << "integer_literal_name";
+                break;
             case name_type::is_abstraction_name:
                 std::cout << "abstraction_name";
                 break;
@@ -269,6 +300,9 @@ namespace parser {
             switch (arguments[i].p_name_type) {
             case name_type::is_value_name:
                 std::cout << "value_name";
+                break;
+            case name_type::is_integer_literal:
+                std::cout << "integer_literal_name";
                 break;
             case name_type::is_abstraction_name:
                 std::cout << "abstraction_name";
@@ -310,14 +344,14 @@ namespace parser {
                 // print statments by type
                 if (program.p_abstractions[abstraction].p_scope[statement].p_name.p_name_type == name_type::is_offset) {
                     // print offset
-                    std::cout << "\t\tOffset Name: @" << program.p_abstractions[abstraction].p_scope[statement].p_name.p_name_value << std::endl;
+                    std::cout << "\t\tOffset Name: " << program.p_abstractions[abstraction].p_scope[statement].p_name.p_name_value << std::endl;
                 } else {
                     // print name
                     std::cout << "\t\tStatement Name: " << program.p_abstractions[abstraction].p_scope[statement].p_name.p_name_value << std::endl;
 
                     // print io
                     print_inputs(3, program.p_abstractions[abstraction].p_scope[statement].p_inputs);
-                    print_inputs(3, program.p_abstractions[abstraction].p_scope[statement].p_outputs);
+                    print_outputs(3, program.p_abstractions[abstraction].p_scope[statement].p_outputs);
                 }
             }
         }
