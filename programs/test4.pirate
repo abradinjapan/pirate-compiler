@@ -1,0 +1,14 @@
+pirate.write_cell(value)(destination) !
+pirate.copy(source)(destination) !
+
+sail()() = {
+    pirate.write_cell(pirate.integer.100)(var.a)
+    pirate.write_cell(pirate.integer.200)(var.b)
+    pirate.write_cell(pirate.integer.300)(var.c)
+    pirate.write_cell(pirate.integer.400)(var.d)
+
+    @random.offset
+
+    pirate.copy(var.a)(var.b)
+    pirate.copy(var.d)(var.e)
+}

@@ -15,6 +15,8 @@ namespace lexer {
         left_curly_bracket,
         right_curly_bracket,
         offset_marker,
+        instruction_marker,
+        abstraction_marker,
     };
 
     // lexling
@@ -122,6 +124,20 @@ namespace lexer {
                 } else if (user_code[index] == '@') {
                     // add lexling
                     output.p_lexlings.push_back(lexling(type::offset_marker, "@"));
+
+                    // next index
+                    index++;
+                // check for instruction marker
+                } else if (user_code[index] == '!') {
+                    // add lexling
+                    output.p_lexlings.push_back(lexling(type::instruction_marker, "!"));
+
+                    // next index
+                    index++;
+                // check for instruction marker
+                } else if (user_code[index] == '=') {
+                    // add lexling
+                    output.p_lexlings.push_back(lexling(type::abstraction_marker, "="));
 
                     // next index
                     index++;

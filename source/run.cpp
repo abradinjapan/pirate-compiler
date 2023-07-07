@@ -36,6 +36,7 @@ namespace runner {
     enum instruction_type {
         quit,
         write_cell,
+        copy_cell,
         print_cell_as_number,
         print_cell_as_character,
         create_new_context,
@@ -87,6 +88,19 @@ namespace runner {
         // setup instruction parameters
         temp_instruction.p_type = instruction_type::write_cell;
         temp_instruction.p_write_register_value = value;
+        temp_instruction.p_output_0 = destination;
+
+        // create new instruction
+        program.p_instructions.push_back(temp_instruction);
+    }
+
+    // add copy cell instruction to program
+    void append__copy_cell(program& program, cell_ID source, cell_ID destination) {
+        instruction temp_instruction = instruction();
+
+        // setup instruction parameters
+        temp_instruction.p_type = instruction_type::copy_cell;
+        temp_instruction.p_input_0 = source;
         temp_instruction.p_output_0 = destination;
 
         // create new instruction
@@ -244,6 +258,14 @@ namespace runner {
             case instruction_type::write_cell:
                 // write data
                 context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = program.p_instructions[current_instruction].p_write_register_value;
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::copy_cell:
+                // copy data
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
 
                 // next instruction
                 current_instruction++;

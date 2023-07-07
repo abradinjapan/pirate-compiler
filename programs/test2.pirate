@@ -1,4 +1,4 @@
-main(a b)(c d) {
+main(a b)(c d) = {
     @start.example
 
     do_nothing(e f)(gg hh iii)

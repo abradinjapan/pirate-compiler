@@ -3,7 +3,7 @@
 
 #include "lex.cpp"
 #include "parse.cpp"
-#include "abstract.cpp"
+#include "account.cpp"
 #include "run.cpp"
 
 std::string load_file(std::string file_path) {
@@ -16,10 +16,10 @@ std::string load_file(std::string file_path) {
 void compile(std::string user_code) {
     lexer::lexlings lexlings;
     parser::program parse_tree;
-    abstracter::header_table header_table;
+    accounter::accounting_table accounting_table;
     bool lex_error = false;
     bool parse_error = false;
-    bool abstraction_error = false;
+    bool accounting_error = false;
 
     // print original file
     std::cout << "Original File:" << std::endl << user_code << std::endl;
@@ -49,24 +49,14 @@ void compile(std::string user_code) {
         return;
     }
 
-    // collect headers
-    header_table = abstracter::get_header_table(parse_tree, abstraction_error);
+    // account program
+    accounting_table = accounter::account_program(parse_tree, accounting_error);
 
-    // print headers
-    abstracter::print_header_table(header_table);
+    // print accouting table
+    accounter::print_accouting_table(accounting_table);
 
     // do not proceed if error occured
-    if (abstraction_error) {
-        return;
-    }
-
-    // check if all headers have a match
-    std::cout << "All abstraction calls have a matching header: ";
-    if (abstracter::verify_all_headers(header_table, parse_tree) == true) {
-        std::cout << "true" << std::endl;
-    } else {
-        std::cout << "false" << std::endl;
-
+    if (accounting_error) {
         return;
     }
 
@@ -78,12 +68,15 @@ void test_runner() {
     bool error_occured = false;
 
     // build program
-    runner::append__create_new_context(program, 3);
+    runner::append__create_new_context(program, 4);
     runner::append__write_cell(program, 1002, 0);
     runner::append__write_cell(program, '\n', 1);
     runner::append__print_cell_as_number(program, 0);
     runner::append__print_cell_as_character(program, 1);
-    //runner::append__write_cell(program, 3, 2);
+    runner::append__write_cell(program, 100, 2);
+    runner::append__copy_cell(program, 2, 3);
+    runner::append__print_cell_as_number(program, 3);
+    runner::append__print_cell_as_character(program, 1);
     //runner::append__jump_to(program, 2);
     runner::append__restore_old_context(program);
     runner::append__quit(program);
@@ -96,9 +89,10 @@ int main() {
     std::cout << "☠️ This here infernal contraption be a compiler! ARRGH!☠️ " << std::endl;
 
     // compile
-    compile(load_file("programs/test.pirate"));
-    compile(load_file("programs/test2.pirate"));
+    //compile(load_file("programs/test.pirate"));
+    //compile(load_file("programs/test2.pirate"));
     compile(load_file("programs/test3.pirate"));
+    compile(load_file("programs/test4.pirate"));
 
     // test runner
     test_runner();

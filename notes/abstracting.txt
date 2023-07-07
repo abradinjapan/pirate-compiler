@@ -9,8 +9,16 @@ Collect data and verify integrity in stages.
         - Any statements that are not matched to a header, reject verification.
     - Verify all variables in every abstraction.
         - If a variable is used before it is declared, reject verification.
-        - If a variable is redeclared as an input or output, reject verification.
+        - If a duplicate input or output variable is present, reject verification.
     - Verify all offsets in every abstraction.
         - If an offset is declared more than once, reject verification.
         - If an offset is undeclared but used, reject verification.
     - Get cell types.
+
+A different type of table is necessary for each feature supported.
+    All things must be verified individually / separately.
+    Meaning that these things need there own tables / trackers.
+    - Registers
+    - Offsets
+    - Literals
+    - etc.
