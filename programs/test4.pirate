@@ -12,3 +12,8 @@ sail()() = {
     pirate.copy(var.a)(var.b)
     pirate.copy(var.d)(var.e)
 }
+
+function(a b c)(d) = {
+    pirate.copy(b)(w)
+    pirate.copy(a)(d)
+}

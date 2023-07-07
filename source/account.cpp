@@ -282,10 +282,68 @@ namespace accounter {
         return output;
     }
 
+    class offset {
+    public:
+        std::string p_name;
+        uint64_t p_statement_index;
+
+        offset(std::string name, uint64_t statement_index) {
+            p_name = name;
+            p_statement_index = statement_index;
+        }
+    };
+
+    class offset_table {
+    public:
+        std::vector<offset> p_offsets;
+
+        bool contains_offset(std::string name) {
+            // check for offset
+            for (uint64_t i = 0; i < p_offsets.size(); i++) {
+                // check for match
+                if (p_offsets[i].p_name == name) {
+                    // found match
+                    return true;
+                }
+            }
+
+            // no match found
+            return false;
+        }
+    };
+
+    offset_table get_offset_table(parser::abstraction& abstraction, bool& error_occured) {
+        offset_table output;
+
+        // for each statement
+        for (uint64_t statement_ID = 0; statement_ID < abstraction.p_scope.size(); statement_ID++) {
+            // check to see if statement type is offset
+            if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_offset_declaration) {
+                // check to see if offset is already declared
+                if (output.contains_offset(abstraction.p_scope[statement_ID].p_name.p_name_value) == true) {
+                    // if an offset is declared again, an error occured
+                    error_occured = true;
+
+                    // announce error
+                    std::cout << "Accounting Error: Offset redeclared: " << abstraction.p_scope[statement_ID].p_name.p_name_value << std::endl;
+
+                    // quit
+                    return output;
+                }
+
+                // otherwise declare variable
+                output.p_offsets.push_back(offset(abstraction.p_scope[statement_ID].p_name.p_name_value, statement_ID));
+            }
+        }
+
+        return output;
+    }
+
     class accounting_table {
     public:
         header_table p_header_table;
         std::vector<variable_table> p_abstraction_variable_tables;
+        std::vector<offset_table> p_abstraction_offset_tables;
     };
 
     // account program
@@ -301,6 +359,8 @@ namespace accounter {
         } else {
             std::cout << "Error: Headers and statements do not match." << std::endl;
             error_occured = true;
+
+            return output;
         }
 
         // get variable tables
@@ -314,30 +374,53 @@ namespace accounter {
             }
         }
 
+        // get offset tables
+        for (uint64_t abstraction_ID = 0; abstraction_ID < program.p_abstractions.size(); abstraction_ID++) {
+            // get table
+            output.p_abstraction_offset_tables.push_back(get_offset_table(program.p_abstractions[abstraction_ID], error_occured));
+
+            // check for error
+            if (error_occured) {
+                return output;
+            }
+        }
+
         return output;
     }
 
     // print variable table
     void print_variable_table(variable_table table) {
         // start information
-        std::cout << "Variable Table:" << std::endl;
+        std::cout << "\tVariable Table:" << std::endl;
 
         // print inputs
-        std::cout << "\tAbstraction Inputs:" << std::endl;
+        std::cout << "\t\tAbstraction Inputs:" << std::endl;
         for (uint64_t i = 0; i < table.p_inputs.size(); i++) {
-            std::cout << "\t\tInput: " << table.p_inputs[i].p_name << " [ " << (long long)table.p_inputs[i].p_declaration_index << " ]" << std::endl;
+            std::cout << "\t\t\tInput: " << table.p_inputs[i].p_name << " [ " << (long long)table.p_inputs[i].p_declaration_index << " ]" << std::endl;
         }
 
         // print outputs
-        std::cout << "\tAbstraction Ouputs:" << std::endl;
+        std::cout << "\t\tAbstraction Ouputs:" << std::endl;
         for (uint64_t i = 0; i < table.p_outputs.size(); i++) {
-            std::cout << "\t\tOutput: " << table.p_outputs[i].p_name << " [ " << (long long)table.p_outputs[i].p_declaration_index << " ]" << std::endl;
+            std::cout << "\t\t\tOutput: " << table.p_outputs[i].p_name << " [ " << (long long)table.p_outputs[i].p_declaration_index << " ]" << std::endl;
         }
 
         // print variables
-        std::cout << "\tAbstraction Variables:" << std::endl;
+        std::cout << "\t\tAbstraction Variables:" << std::endl;
         for (uint64_t i = 0; i < table.p_variables.size(); i++) {
-            std::cout << "\t\tVariable: " << table.p_variables[i].p_name << " [ " << (long long)table.p_variables[i].p_declaration_index << " ]" << std::endl;
+            std::cout << "\t\t\tVariable: " << table.p_variables[i].p_name << " [ " << (long long)table.p_variables[i].p_declaration_index << " ]" << std::endl;
+        }
+    }
+
+    // print offset table
+    void print_offset_table(offset_table table) {
+        // print header
+        std::cout << "\tOffset Table:" << std::endl;
+
+        // print offsets
+        for (uint64_t i = 0; i < table.p_offsets.size(); i++) {
+            // print offset
+            std::cout << "\t\t" << table.p_offsets[i].p_name << " [ " << table.p_offsets[i].p_statement_index << " ]" << std::endl;
         }
     }
 
@@ -346,10 +429,14 @@ namespace accounter {
         // print header table
         print_header_table(table.p_header_table);
 
-        // print all variable tables
+        // print all subtables
         for (uint64_t table_ID = 0; table_ID < table.p_abstraction_variable_tables.size(); table_ID++) {
-            // print variable table
+            // print abstraction name for clarity
+            std::cout << "Abstraction: " << table.p_header_table.p_headers[table_ID].p_name << std::endl;
+
+            // print tables
             print_variable_table(table.p_abstraction_variable_tables[table_ID]);
+            print_offset_table(table.p_abstraction_offset_tables[table_ID]);
         }
     }
 }
