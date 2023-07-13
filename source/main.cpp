@@ -52,8 +52,8 @@ void compile(std::string user_code) {
     // account program
     accounting_table = accounter::account_program(parse_tree, accounting_error);
 
-    // print accouting table
-    accounter::print_accouting_table(accounting_table);
+    // print accounting table
+    accounter::print_accounting_table(accounting_table);
 
     // do not proceed if error occured
     if (accounting_error) {

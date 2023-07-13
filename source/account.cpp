@@ -339,11 +339,98 @@ namespace accounter {
         return output;
     }
 
+    class literal {
+    public:
+        std::string p_name;
+        uint64_t p_integer_value;
+        int p_statement_ID;
+        int p_argument_ID;
+
+        literal(std::string name, int statement_ID, int argument_ID) {
+            std::string prefix = "pirate.integer.";
+
+            // set properties
+            p_name = name;
+            p_integer_value = std::stoi(name.substr(prefix.length(), name.length() - prefix.length()));
+            p_statement_ID = statement_ID;
+            p_argument_ID = argument_ID;
+        }
+    };
+
+    class literal_table {
+    public:
+        std::vector<literal> p_literals;
+    };
+
+    literal_table get_literal_table(parser::abstraction& abstraction, bool& error_occured) {
+        literal_table output;
+
+        // scan for literals
+        // for each statement
+        for (uint64_t statement_ID = 0; statement_ID < abstraction.p_scope.size(); statement_ID++) {
+            // check to see if statement is abstraction call type
+            if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_abstraction_call) {
+                // check statement inputs for literals
+                for (uint64_t input_ID = 0; input_ID < abstraction.p_scope[statement_ID].p_inputs.size(); input_ID++) {
+                    // check for literal
+                    if (abstraction.p_scope[statement_ID].p_inputs[input_ID].p_name_type == parser::name_type::is_integer_literal) {
+                        // add literal
+                        output.p_literals.push_back(literal(abstraction.p_scope[statement_ID].p_inputs[input_ID].p_name_value, statement_ID, input_ID));
+                    }
+                }
+
+                // check statement outputs for illegal literals (literals cannot be outputs)
+                for (uint64_t output_ID = 0; output_ID < abstraction.p_scope[statement_ID].p_outputs.size(); output_ID++) {
+                    // check for literal
+                    if (abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_type == parser::name_type::is_integer_literal) {
+                        // inform user of error
+                        std::cout << "Error: Integer literal found in abstraction call statement output: " << abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_value << std::endl;
+                        
+                        // set error
+                        error_occured = true;
+
+                        // return
+                        return output;
+                    }
+                }
+            }
+        }
+
+        // success
+        return output;
+    }
+
+    namespace skeleton {
+        enum argument_type {
+            is_input,
+            is_output,
+            is_variable,
+            is_integer_literal,
+            is_offset,
+        };
+
+        class argument {
+            argument_type p_type;
+            int p_ID;
+        };
+
+        class statement {
+        public:
+
+        };
+
+        class abstraction {
+        public:
+            std::vector<statement> p_statements;
+        };
+    }
+
     class accounting_table {
     public:
         header_table p_header_table;
         std::vector<variable_table> p_abstraction_variable_tables;
         std::vector<offset_table> p_abstraction_offset_tables;
+        std::vector<literal_table> p_abstraction_literal_tables;
     };
 
     // account program
@@ -385,6 +472,17 @@ namespace accounter {
             }
         }
 
+        // get literal tables
+        for (uint64_t abstraction_ID = 0; abstraction_ID < program.p_abstractions.size(); abstraction_ID++) {
+            // get table
+            output.p_abstraction_literal_tables.push_back(get_literal_table(program.p_abstractions[abstraction_ID], error_occured));
+
+            // check for error
+            if (error_occured) {
+                return output;
+            }
+        }
+
         return output;
     }
 
@@ -400,7 +498,7 @@ namespace accounter {
         }
 
         // print outputs
-        std::cout << "\t\tAbstraction Ouputs:" << std::endl;
+        std::cout << "\t\tAbstraction Outputs:" << std::endl;
         for (uint64_t i = 0; i < table.p_outputs.size(); i++) {
             std::cout << "\t\t\tOutput: " << table.p_outputs[i].p_name << " [ " << (long long)table.p_outputs[i].p_declaration_index << " ]" << std::endl;
         }
@@ -424,8 +522,20 @@ namespace accounter {
         }
     }
 
-    // print accouting table
-    void print_accouting_table(accounting_table table) {
+    // print literal table
+    void print_literal_table(literal_table table) {
+        // print header
+        std::cout << "\tLiteral Table:" << std::endl;
+        
+        // print literals
+        for (uint64_t i = 0; i < table.p_literals.size(); i++) {
+            // print literal
+            std::cout << "\t\t" << table.p_literals[i].p_name << " ( " << table.p_literals[i].p_integer_value << " ); Found At: [ " << table.p_literals[i].p_statement_ID << " " << table.p_literals[i].p_argument_ID << " ]" << std::endl;
+        }
+    }
+
+    // print accounting table
+    void print_accounting_table(accounting_table table) {
         // print header table
         print_header_table(table.p_header_table);
 
@@ -437,6 +547,7 @@ namespace accounter {
             // print tables
             print_variable_table(table.p_abstraction_variable_tables[table_ID]);
             print_offset_table(table.p_abstraction_offset_tables[table_ID]);
+            print_literal_table(table.p_abstraction_literal_tables[table_ID]);
         }
     }
 }
