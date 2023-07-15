@@ -402,6 +402,7 @@ namespace accounter {
 
     namespace skeleton {
         enum argument_type {
+            is_invalid,
             is_input,
             is_output,
             is_variable,
@@ -410,22 +411,463 @@ namespace accounter {
         };
 
         class argument {
+        public:
             argument_type p_type;
             int p_ID;
+
+            argument(argument_type type, int ID) {
+                p_type = type;
+                p_ID = ID;
+            }
         };
 
         class statement {
         public:
-
+            int p_header_ID;
+            std::vector<argument> p_inputs;
+            std::vector<argument> p_outputs;
         };
 
         class abstraction {
         public:
+            variable_table p_variables;
+            offset_table p_offsets;
+            literal_table p_literals;
+            bool has_scope;
             std::vector<statement> p_statements;
+        };
+
+        class skeleton {
+        public:
+            header_table p_header_table;
+            std::vector<abstraction> p_abstractions;
+
+            void get_skeleton(parser::program& program, bool& error_occured) {
+                // get header table
+                p_header_table = get_header_table(program, error_occured);
+
+                // verify header table
+                if (verify_all_headers(p_header_table, program) == true) {
+                    std::cout << "All headers and statements match correctly." << std::endl;
+                } else {
+                    std::cout << "Error: Headers and statements do not match." << std::endl;
+                    error_occured = true;
+
+                    return;
+                }
+
+                // get abstractions
+                for (uint64_t i = 0; i < program.p_abstractions.size(); i++) {
+                    // create new abstraction
+                    p_abstractions.push_back(abstraction());
+
+                    // check for scope
+                    if (program.p_abstractions[i].p_type == parser::abstraction_type::is_code_defined) {
+                        p_abstractions[i].has_scope = true;
+                    } else {
+                        p_abstractions[i].has_scope = false;
+                    }
+
+                    // get variable table
+                    p_abstractions[i].p_variables = get_variable_table(program.p_abstractions[i], error_occured);
+
+                    // check for error
+                    if (error_occured) {
+                        return;
+                    }
+
+                    if (p_abstractions[i].has_scope == true) {
+                        // get offset table
+                        p_abstractions[i].p_offsets = get_offset_table(program.p_abstractions[i], error_occured);
+
+                        // check for error
+                        if (error_occured) {
+                            return;
+                        }
+
+                        // get literal table
+                        p_abstractions[i].p_literals = get_literal_table(program.p_abstractions[i], error_occured);
+
+                        // check for error
+                        if (error_occured) {
+                            return;
+                        }
+
+                        // get statement table
+                        p_abstractions[i].p_statements = get_statement_table(program.p_abstractions[i], i, error_occured);
+
+                        // check for error
+                        if (error_occured) {
+                            return;
+                        }
+                    }
+                }
+
+                return;
+            }
+
+            void print_skeleton() {
+                // print header table
+                print_header_table(p_header_table);
+
+                // print all abstractions
+                for (uint64_t abstraction_ID = 0; abstraction_ID < p_abstractions.size(); abstraction_ID++) {
+                    // print abstraction name for clarity
+                    std::cout << "Abstraction: " << p_header_table.p_headers[abstraction_ID].p_name << std::endl;
+
+                    // print tables
+                    print_variable_table(p_abstractions[abstraction_ID].p_variables);
+                    if (p_abstractions[abstraction_ID].has_scope) {
+                        print_offset_table(p_abstractions[abstraction_ID].p_offsets);
+                        print_literal_table(p_abstractions[abstraction_ID].p_literals);
+                        print_statement_table(p_abstractions[abstraction_ID].p_statements);
+                    }
+                }
+            }
+
+        private:
+            // lookup header in header table
+            int lookup_header(std::string header_name, bool& error_occured) {
+                // lookup header
+                for (uint64_t header_ID = 0; header_ID < p_header_table.p_headers.size(); header_ID++) {
+                    // match found
+                    if (p_header_table.p_headers[header_ID].p_name == header_name) {
+                        return header_ID;
+                    }
+                }
+
+                // no match found (should not be possible, but here just in case)
+                error_occured = true;
+
+                // inform user of error
+                std::cout << "Error: Header not found during lookup: " <<  header_name << std::endl;
+
+                // return invalid argument
+                return -1;
+            }
+
+            // lookup variable in variable table
+            argument lookup_variable(uint64_t abstraction_ID, std::string name_value, bool& error_occured) {
+                // check for match from inputs
+                for (uint64_t input_ID = 0; input_ID < p_abstractions[abstraction_ID].p_variables.p_inputs.size(); input_ID++) {
+                    // check for variable name
+                    if (p_abstractions[abstraction_ID].p_variables.p_inputs[input_ID].p_name == name_value) {
+                        // match found
+                        return argument(argument_type::is_input, input_ID);
+                    }
+                }
+
+                // check for match from outputs
+                for (uint64_t output_ID = 0; output_ID < p_abstractions[abstraction_ID].p_variables.p_outputs.size(); output_ID++) {
+                    // check for variable name
+                    if (p_abstractions[abstraction_ID].p_variables.p_outputs[output_ID].p_name == name_value) {
+                        // match found
+                        return argument(argument_type::is_output, output_ID);
+                    }
+                }
+
+                // check for match from variables
+                for (uint64_t variable_ID = 0; variable_ID < p_abstractions[abstraction_ID].p_variables.p_variables.size(); variable_ID++) {
+                    // check for variable name
+                    if (p_abstractions[abstraction_ID].p_variables.p_variables[variable_ID].p_name == name_value) {
+                        // match found
+                        return argument(argument_type::is_variable, variable_ID);
+                    }
+                }
+
+                // no match found (should not be possible, but handled anyways)
+                error_occured = true;
+
+                // inform user of error
+                std::cout << "Error: Variable not found from lookup: " << name_value << std::endl;
+
+                // return invalid argument
+                return argument(argument_type::is_invalid, -1);
+            }
+
+            // lookup offset in offset table
+            argument lookup_offset(uint64_t abstraction_ID, std::string name, bool& error_occured) {
+                // lookup offset
+                for (uint64_t offset_ID = 0; offset_ID < p_abstractions[abstraction_ID].p_offsets.p_offsets.size(); offset_ID++) {
+                    // check for match
+                    if (p_abstractions[abstraction_ID].p_offsets.p_offsets[offset_ID].p_name == name) {
+                        // match found
+                        return argument(argument_type::is_offset, offset_ID);
+                    }
+                }
+
+                // offset not found (should not be possible, but handled anyways)
+                error_occured = true;
+
+                // inform user of error
+                std::cout << "Error: Offset not found during lookup: " << name << std::endl;
+
+                // return invalid argument
+                return argument(argument_type::is_invalid, -1);
+            }
+
+            argument lookup_literal(int abstraction_ID, int statement_ID, int io_ID, bool& error_occured) {
+                // lookup literal
+                for (uint64_t literal_ID = 0; literal_ID < p_abstractions[abstraction_ID].p_literals.p_literals.size(); literal_ID++) {
+                    // check for match
+                    if (p_abstractions[abstraction_ID].p_literals.p_literals[literal_ID].p_statement_ID == statement_ID && p_abstractions[abstraction_ID].p_literals.p_literals[literal_ID].p_argument_ID == io_ID) {
+                        // return match
+                        return argument(argument_type::is_integer_literal, literal_ID);
+                    }
+                }
+
+                // literal not found (should not be possible, but handled anyways)
+                error_occured = true;
+
+                // inform user of error
+                std::cout << "Error: Literal not found during lookup: [ " << statement_ID << " " << io_ID << " ]" << std::endl;
+
+                // return invalid argument
+                return argument(argument_type::is_invalid, -1);
+            }
+
+            // get statement table
+            std::vector<statement> get_statement_table(parser::abstraction& abstraction, int abstraction_ID, bool& error_occured) {
+                std::vector<statement> output;
+
+                // get each abstraction call statement
+                for (uint64_t statement_ID = 0; statement_ID < abstraction.p_scope.size(); statement_ID++) {
+                    // make sure that the statement is an abstraction call
+                    if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_abstraction_call) {
+                        // create new abstraction call statement
+                        output.push_back(statement());
+
+                        // get statement name
+                        output[output.size() - 1].p_header_ID = lookup_header(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured);
+
+                        // check for error
+                        if (error_occured) {
+                            return output;
+                        }
+
+                        // get inputs
+                        for (uint64_t input_ID = 0; input_ID < abstraction.p_scope[statement_ID].p_inputs.size(); input_ID++) {
+                            // get argument by type
+                            switch (abstraction.p_scope[statement_ID].p_inputs[input_ID].p_name_type) {
+                            // is variable
+                            case parser::name_type::is_value_name:
+                                // look up variable
+                                output[output.size() - 1].p_inputs.push_back(lookup_variable(abstraction_ID, abstraction.p_scope[statement_ID].p_inputs[input_ID].p_name_value, error_occured));
+
+                                // check for error
+                                if (error_occured) {
+                                    return output;
+                                }
+
+                                break;
+                            // is offset
+                            case parser::name_type::is_offset:
+                                // lookup offset
+                                output[output.size() - 1].p_inputs.push_back(lookup_offset(abstraction_ID, abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
+
+                                // check for error
+                                if (error_occured) {
+                                    return output;
+                                }
+
+                                break;
+                            // is literal
+                            case parser::name_type::is_integer_literal:
+                                // lookup literal
+                                output[output.size() - 1].p_inputs.push_back(lookup_literal(abstraction_ID, output.size() - 1, input_ID, error_occured));
+
+                                // check for error
+                                if (error_occured) {
+                                    return output;
+                                }
+
+                                break;
+                            // not valid
+                            default:
+                                std::cout << "Error: Illegal name type in statement inputs." << std::endl;
+                                return output;
+                            }
+                        }
+
+                        // get outputs
+                        for (uint64_t output_ID = 0; output_ID < abstraction.p_scope[statement_ID].p_outputs.size(); output_ID++) {
+                            // get argument by type
+                            switch (abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_type) {
+                            // is variable
+                            case parser::name_type::is_value_name:
+                                // look up variable
+                                output[output.size() - 1].p_outputs.push_back(lookup_variable(abstraction_ID, abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_value, error_occured));
+
+                                // check for error
+                                if (error_occured) {
+                                    return output;
+                                }
+
+                                break;
+                            // is offset
+                            case parser::name_type::is_offset:
+                                // lookup offset
+                                output[output.size() - 1].p_outputs.push_back(lookup_offset(abstraction_ID, abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
+
+                                // check for error
+                                if (error_occured) {
+                                    return output;
+                                }
+
+                                break;
+                            // not valid
+                            default:
+                                std::cout << "Error: Illegal name type in statement outputs." << std::endl;
+                                return output;
+                            }
+                        }
+                    }
+                }
+
+                // success
+                return output;
+            }
+
+            // print variable table
+            void print_variable_table(variable_table& table) {
+                // start information
+                std::cout << "\tVariable Table:" << std::endl;
+
+                // print inputs
+                std::cout << "\t\tAbstraction Inputs:" << std::endl;
+                for (uint64_t i = 0; i < table.p_inputs.size(); i++) {
+                    std::cout << "\t\t\tInput: " << table.p_inputs[i].p_name << " [ " << (long long)table.p_inputs[i].p_declaration_index << " ]" << std::endl;
+                }
+
+                // print outputs
+                std::cout << "\t\tAbstraction Outputs:" << std::endl;
+                for (uint64_t i = 0; i < table.p_outputs.size(); i++) {
+                    std::cout << "\t\t\tOutput: " << table.p_outputs[i].p_name << " [ " << (long long)table.p_outputs[i].p_declaration_index << " ]" << std::endl;
+                }
+
+                // print variables
+                std::cout << "\t\tAbstraction Variables:" << std::endl;
+                for (uint64_t i = 0; i < table.p_variables.size(); i++) {
+                    std::cout << "\t\t\tVariable: " << table.p_variables[i].p_name << " [ " << (long long)table.p_variables[i].p_declaration_index << " ]" << std::endl;
+                }
+            }
+
+            // print offset table
+            void print_offset_table(offset_table& table) {
+                // print header
+                std::cout << "\tOffset Table:" << std::endl;
+
+                // print offsets
+                for (uint64_t i = 0; i < table.p_offsets.size(); i++) {
+                    // print offset
+                    std::cout << "\t\t" << table.p_offsets[i].p_name << " [ " << table.p_offsets[i].p_statement_index << " ]" << std::endl;
+                }
+            }
+
+            // print literal table
+            void print_literal_table(literal_table& table) {
+                // print header
+                std::cout << "\tLiteral Table:" << std::endl;
+        
+                // print literals
+                for (uint64_t i = 0; i < table.p_literals.size(); i++) {
+                    // print literal
+                    std::cout << "\t\t" << table.p_literals[i].p_name << " ( " << table.p_literals[i].p_integer_value << " ); Found At: [ " << table.p_literals[i].p_statement_ID << " " << table.p_literals[i].p_argument_ID << " ]" << std::endl;
+                }
+            }
+
+            // print statement table
+            void print_statement_table(std::vector<statement>& table) {
+                // print header
+                std::cout << "\tStatement Table:" << std::endl;
+
+                // print statements
+                for (uint64_t i = 0; i < table.size(); i++) {
+                    // print statement header
+                    std::cout << "\t\t" << table[i].p_header_ID << " : ";
+
+                    // print inputs
+                    for (uint64_t j = 0; j < table[i].p_inputs.size(); j++) {
+                        // start input
+                        std::cout << "[ ";
+
+                        // print input body
+                        switch (table[i].p_inputs[j].p_type) {
+                        case argument_type::is_input:
+                            std::cout << "is_input" << " -> " << table[i].p_inputs[j].p_ID;
+                            break;
+                        case argument_type::is_output:
+                            std::cout << "is_output" << " -> " << table[i].p_inputs[j].p_ID;
+                            break;
+                        case argument_type::is_variable:
+                            std::cout << "is_variable" << " -> " << table[i].p_inputs[j].p_ID;
+                            break;
+                        case argument_type::is_offset:
+                            std::cout << "is_offset" << " -> " << table[i].p_inputs[j].p_ID;
+                            break;
+                        case argument_type::is_integer_literal:
+                            std::cout << "is_integer_literal" << " -> " << table[i].p_inputs[j].p_ID;
+                            break;
+                        default:
+                            std::cout << "is_invalid" << " -> " << table[i].p_inputs[j].p_ID;
+                            break;
+                        }
+
+                        // print input end
+                        std::cout << " ]";
+                    }
+
+                    // print empty marker if there are no inputs
+                    if (table[i].p_inputs.size() == 0) {
+                        std::cout << "[empty]";
+                    }
+
+                    // continue statement header
+                    std::cout << " : ";
+
+                    // print outputs
+                    for (uint64_t j = 0; j < table[i].p_outputs.size(); j++) {
+                        // start output
+                        std::cout << "[ ";
+
+                        switch (table[i].p_outputs[j].p_type) {
+                        case argument_type::is_input:
+                            std::cout << "is_input" << " -> " << table[i].p_outputs[j].p_ID;
+                            break;
+                        case argument_type::is_output:
+                            std::cout << "is_output" << " -> " << table[i].p_outputs[j].p_ID;
+                            break;
+                        case argument_type::is_variable:
+                            std::cout << "is_variable" << " -> " << table[i].p_outputs[j].p_ID;
+                            break;
+                        case argument_type::is_offset:
+                            std::cout << "is_offset" << " -> " << table[i].p_outputs[j].p_ID;
+                            break;
+                        case argument_type::is_integer_literal:
+                            std::cout << "is_integer_literal" << " -> " << table[i].p_outputs[j].p_ID;
+                            break;
+                        default:
+                            std::cout << "is_invalid" << " -> " << table[i].p_outputs[j].p_ID;
+                            break;
+                        }
+
+                        // print output end
+                        std::cout << " ]";
+                    }
+
+                    // print empty marker if there are no outputs
+                    if (table[i].p_outputs.size() == 0) {
+                        std::cout << "[empty]";
+                    }
+
+                    // finish statement header
+                    std::cout << std::endl;
+                }
+            }
         };
     }
 
-    class accounting_table {
+    /*class accounting_table {
     public:
         header_table p_header_table;
         std::vector<variable_table> p_abstraction_variable_tables;
@@ -549,5 +991,5 @@ namespace accounter {
             print_offset_table(table.p_abstraction_offset_tables[table_ID]);
             print_literal_table(table.p_abstraction_literal_tables[table_ID]);
         }
-    }
+    }*/
 }

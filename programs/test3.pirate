@@ -4,7 +4,7 @@ sail.1()() = {
 
 sail.2()() = {
     sail.3(pirate.integer.10)()
-    sail.3()()
+    sail.3(pirate.integer.20)()
 }
 
 sail.3()() = {

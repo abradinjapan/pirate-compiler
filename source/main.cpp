@@ -16,7 +16,7 @@ std::string load_file(std::string file_path) {
 void compile(std::string user_code) {
     lexer::lexlings lexlings;
     parser::program parse_tree;
-    accounter::accounting_table accounting_table;
+    accounter::skeleton::skeleton skeleton;
     bool lex_error = false;
     bool parse_error = false;
     bool accounting_error = false;
@@ -50,10 +50,10 @@ void compile(std::string user_code) {
     }
 
     // account program
-    accounting_table = accounter::account_program(parse_tree, accounting_error);
+    skeleton.get_skeleton(parse_tree, accounting_error);
 
-    // print accounting table
-    accounter::print_accounting_table(accounting_table);
+    // print program
+    skeleton.print_skeleton();
 
     // do not proceed if error occured
     if (accounting_error) {
@@ -92,6 +92,7 @@ int main() {
     //compile(load_file("programs/test.pirate"));
     //compile(load_file("programs/test2.pirate"));
     compile(load_file("programs/test3.pirate"));
+    compile(load_file("programs/test5.pirate"));
     compile(load_file("programs/test4.pirate"));
 
     // test runner
