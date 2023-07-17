@@ -71,13 +71,13 @@ void test_runner() {
     runner::append__create_new_context(program, 4);
     runner::append__write_cell(program, 1002, 0);
     runner::append__write_cell(program, '\n', 1);
+    runner::append__jump_offset(program, 0);
+    runner::append__write_cell(program, 1004, 0);
     runner::append__print_cell_as_number(program, 0);
     runner::append__print_cell_as_character(program, 1);
-    runner::append__write_cell(program, 100, 2);
-    runner::append__copy_cell(program, 2, 3);
-    runner::append__print_cell_as_number(program, 3);
+    runner::append__offset(program);
+    runner::append__print_cell_as_number(program, 0);
     runner::append__print_cell_as_character(program, 1);
-    //runner::append__jump_to(program, 2);
     runner::append__restore_old_context(program);
     runner::append__quit(program);
 
@@ -91,9 +91,9 @@ int main() {
     // compile
     //compile(load_file("programs/test.pirate"));
     //compile(load_file("programs/test2.pirate"));
-    compile(load_file("programs/test3.pirate"));
-    compile(load_file("programs/test5.pirate"));
+    //compile(load_file("programs/test3.pirate"));
     compile(load_file("programs/test4.pirate"));
+    compile(load_file("programs/test5.pirate"));
 
     // test runner
     test_runner();

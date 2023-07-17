@@ -2,8 +2,7 @@
 
 /* Notes */
 /*
-    The goal of this file is to filter out all abstraction definitions and abstraction calls.
-    The code must contain one unique abstraction header for each abstraction.
+    The goal of this file is to map out the code from strings to integer representations.
 */
 
 #include "parse.cpp"
@@ -71,24 +70,22 @@ namespace accounter {
         }
     };
 
-    header_table get_header_table(parser::program& program, bool& error_occured) {
-        header_table output;
-
+    void get_header_table(parser::program& program, header_table& headers, bool& error_occured) {
         // add abstractions to header table
         for (uint64_t i = 0; i < program.p_abstractions.size(); i++) {
             // try to add a header
-            if (output.try_register_header(header(program.p_abstractions[i].p_header.p_name.p_name_value, program.p_abstractions[i].p_header.p_inputs.size(), program.p_abstractions[i].p_header.p_outputs.size())) == false) {
+            if (headers.try_register_header(header(program.p_abstractions[i].p_header.p_name.p_name_value, program.p_abstractions[i].p_header.p_inputs.size(), program.p_abstractions[i].p_header.p_outputs.size())) == false) {
                 // error, header re-registered
                 std::cout << "Abstracting Error: Duplicate Header Found : " << program.p_abstractions[i].p_header.p_name.p_name_value << std::endl;
 
                 // set error
                 error_occured = true;
 
-                return output;
+                return;
             }
         }
 
-        return output;
+        return;
     }
 
     void print_header_table(header_table table) {
@@ -443,8 +440,11 @@ namespace accounter {
             std::vector<abstraction> p_abstractions;
 
             void get_skeleton(parser::program& program, bool& error_occured) {
-                // get header table
-                p_header_table = get_header_table(program, error_occured);
+                // get predefined abstractions
+                add_predefined_abstractions();
+
+                // get header table from file
+                get_header_table(program, p_header_table, error_occured);
 
                 // verify header table
                 if (verify_all_headers(p_header_table, program) == true) {
@@ -456,29 +456,29 @@ namespace accounter {
                     return;
                 }
 
-                // get abstractions
+                // get abstractions from file
                 for (uint64_t i = 0; i < program.p_abstractions.size(); i++) {
                     // create new abstraction
                     p_abstractions.push_back(abstraction());
 
                     // check for scope
                     if (program.p_abstractions[i].p_type == parser::abstraction_type::is_code_defined) {
-                        p_abstractions[i].has_scope = true;
+                        p_abstractions[p_abstractions.size() - 1].has_scope = true;
                     } else {
-                        p_abstractions[i].has_scope = false;
+                        p_abstractions[p_abstractions.size() - 1].has_scope = false;
                     }
 
                     // get variable table
-                    p_abstractions[i].p_variables = get_variable_table(program.p_abstractions[i], error_occured);
+                    p_abstractions[p_abstractions.size() - 1].p_variables = get_variable_table(program.p_abstractions[i], error_occured);
 
                     // check for error
                     if (error_occured) {
                         return;
                     }
 
-                    if (p_abstractions[i].has_scope == true) {
+                    if (p_abstractions[p_abstractions.size() - 1].has_scope == true) {
                         // get offset table
-                        p_abstractions[i].p_offsets = get_offset_table(program.p_abstractions[i], error_occured);
+                        p_abstractions[p_abstractions.size() - 1].p_offsets = get_offset_table(program.p_abstractions[i], error_occured);
 
                         // check for error
                         if (error_occured) {
@@ -486,7 +486,7 @@ namespace accounter {
                         }
 
                         // get literal table
-                        p_abstractions[i].p_literals = get_literal_table(program.p_abstractions[i], error_occured);
+                        p_abstractions[p_abstractions.size() - 1].p_literals = get_literal_table(program.p_abstractions[i], error_occured);
 
                         // check for error
                         if (error_occured) {
@@ -494,7 +494,7 @@ namespace accounter {
                         }
 
                         // get statement table
-                        p_abstractions[i].p_statements = get_statement_table(program.p_abstractions[i], i, error_occured);
+                        p_abstractions[p_abstractions.size() - 1].p_statements = get_statement_table(program.p_abstractions[i], p_abstractions.size() - 1, error_occured);
 
                         // check for error
                         if (error_occured) {
@@ -526,6 +526,36 @@ namespace accounter {
             }
 
         private:
+            // add predefined abstraction
+            void synthesize_header_only_abstraction(std::string name, int input_count, int output_count) {
+                // create header
+                p_header_table.try_register_header(header(name, input_count, output_count));
+
+                // create fake body
+                p_abstractions.push_back(abstraction());
+
+                // setup inputs
+                for (uint64_t i = 0; i < input_count; i++) {
+                    p_abstractions[p_abstractions.size() - 1].p_variables.p_inputs.push_back(variable(std::to_string(i), -2));
+                }
+
+                // setup outputs
+                for (uint64_t i = 0; i < output_count; i++) {
+                    p_abstractions[p_abstractions.size() - 1].p_variables.p_outputs.push_back(variable(std::to_string(i), -1));
+                }
+
+                // setup body
+                p_abstractions[p_abstractions.size() - 1].has_scope = false;
+            }
+
+            // add predefined abstractions to tables
+            void add_predefined_abstractions() {
+                // add predefined abstractions to header table
+                synthesize_header_only_abstraction("pirate.write_cell", 1, 1);
+                synthesize_header_only_abstraction("pirate.copy", 1, 1);
+                synthesize_header_only_abstraction("pirate.print_cell_as_number", 1, 0);
+            }
+
             // lookup header in header table
             int lookup_header(std::string header_name, bool& error_occured) {
                 // lookup header
@@ -866,130 +896,4 @@ namespace accounter {
             }
         };
     }
-
-    /*class accounting_table {
-    public:
-        header_table p_header_table;
-        std::vector<variable_table> p_abstraction_variable_tables;
-        std::vector<offset_table> p_abstraction_offset_tables;
-        std::vector<literal_table> p_abstraction_literal_tables;
-    };
-
-    // account program
-    accounting_table account_program(parser::program& program, bool& error_occured) {
-        accounting_table output;
-        
-        // get header table
-        output.p_header_table = get_header_table(program, error_occured);
-
-        // verify header table
-        if (accounter::verify_all_headers(output.p_header_table, program) == true) {
-            std::cout << "All headers and statements match correctly." << std::endl;
-        } else {
-            std::cout << "Error: Headers and statements do not match." << std::endl;
-            error_occured = true;
-
-            return output;
-        }
-
-        // get variable tables
-        for (uint64_t abstraction_ID = 0; abstraction_ID < program.p_abstractions.size(); abstraction_ID++) {
-            // get table
-            output.p_abstraction_variable_tables.push_back(get_variable_table(program.p_abstractions[abstraction_ID], error_occured));
-
-            // check for error
-            if (error_occured) {
-                return output;
-            }
-        }
-
-        // get offset tables
-        for (uint64_t abstraction_ID = 0; abstraction_ID < program.p_abstractions.size(); abstraction_ID++) {
-            // get table
-            output.p_abstraction_offset_tables.push_back(get_offset_table(program.p_abstractions[abstraction_ID], error_occured));
-
-            // check for error
-            if (error_occured) {
-                return output;
-            }
-        }
-
-        // get literal tables
-        for (uint64_t abstraction_ID = 0; abstraction_ID < program.p_abstractions.size(); abstraction_ID++) {
-            // get table
-            output.p_abstraction_literal_tables.push_back(get_literal_table(program.p_abstractions[abstraction_ID], error_occured));
-
-            // check for error
-            if (error_occured) {
-                return output;
-            }
-        }
-
-        return output;
-    }
-
-    // print variable table
-    void print_variable_table(variable_table table) {
-        // start information
-        std::cout << "\tVariable Table:" << std::endl;
-
-        // print inputs
-        std::cout << "\t\tAbstraction Inputs:" << std::endl;
-        for (uint64_t i = 0; i < table.p_inputs.size(); i++) {
-            std::cout << "\t\t\tInput: " << table.p_inputs[i].p_name << " [ " << (long long)table.p_inputs[i].p_declaration_index << " ]" << std::endl;
-        }
-
-        // print outputs
-        std::cout << "\t\tAbstraction Outputs:" << std::endl;
-        for (uint64_t i = 0; i < table.p_outputs.size(); i++) {
-            std::cout << "\t\t\tOutput: " << table.p_outputs[i].p_name << " [ " << (long long)table.p_outputs[i].p_declaration_index << " ]" << std::endl;
-        }
-
-        // print variables
-        std::cout << "\t\tAbstraction Variables:" << std::endl;
-        for (uint64_t i = 0; i < table.p_variables.size(); i++) {
-            std::cout << "\t\t\tVariable: " << table.p_variables[i].p_name << " [ " << (long long)table.p_variables[i].p_declaration_index << " ]" << std::endl;
-        }
-    }
-
-    // print offset table
-    void print_offset_table(offset_table table) {
-        // print header
-        std::cout << "\tOffset Table:" << std::endl;
-
-        // print offsets
-        for (uint64_t i = 0; i < table.p_offsets.size(); i++) {
-            // print offset
-            std::cout << "\t\t" << table.p_offsets[i].p_name << " [ " << table.p_offsets[i].p_statement_index << " ]" << std::endl;
-        }
-    }
-
-    // print literal table
-    void print_literal_table(literal_table table) {
-        // print header
-        std::cout << "\tLiteral Table:" << std::endl;
-        
-        // print literals
-        for (uint64_t i = 0; i < table.p_literals.size(); i++) {
-            // print literal
-            std::cout << "\t\t" << table.p_literals[i].p_name << " ( " << table.p_literals[i].p_integer_value << " ); Found At: [ " << table.p_literals[i].p_statement_ID << " " << table.p_literals[i].p_argument_ID << " ]" << std::endl;
-        }
-    }
-
-    // print accounting table
-    void print_accounting_table(accounting_table table) {
-        // print header table
-        print_header_table(table.p_header_table);
-
-        // print all subtables
-        for (uint64_t table_ID = 0; table_ID < table.p_abstraction_variable_tables.size(); table_ID++) {
-            // print abstraction name for clarity
-            std::cout << "Abstraction: " << table.p_header_table.p_headers[table_ID].p_name << std::endl;
-
-            // print tables
-            print_variable_table(table.p_abstraction_variable_tables[table_ID]);
-            print_offset_table(table.p_abstraction_offset_tables[table_ID]);
-            print_literal_table(table.p_abstraction_literal_tables[table_ID]);
-        }
-    }*/
 }

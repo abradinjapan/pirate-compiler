@@ -1,7 +1,3 @@
-pirate.write_cell(value)(destination) !
-pirate.copy(source)(destination) !
-pirate.print_cell_as_number(value)() !
-
 sail()() = {
     pirate.write_cell(pirate.integer.100)(var.a)
     pirate.write_cell(pirate.integer.200)(var.b)
