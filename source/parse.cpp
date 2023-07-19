@@ -382,7 +382,7 @@ namespace parser {
         // print arguments
         for (uint64_t i = 0; i < arguments.size(); i++) {
             // print tabs
-            for (uint64_t  i = 0; i < tab_depth; i++) {
+            for (int64_t  i = 0; i < tab_depth; i++) {
                 std::cout << "\t";
             }
 
@@ -420,7 +420,7 @@ namespace parser {
         // print arguments
         for (uint64_t i = 0; i < arguments.size(); i++) {
             // print tabs
-            for (uint64_t  i = 0; i < tab_depth; i++) {
+            for (int64_t  i = 0; i < tab_depth; i++) {
                 std::cout << "\t";
             }
 

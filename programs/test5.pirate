@@ -1,3 +1,16 @@
 sail()() = {
-    sail()()
+    pirate.write_cell(pirate.integer.100)(var.a)
+    pirate.write_cell(pirate.integer.200)(var.b)
+    pirate.write_cell(pirate.integer.300)(var.c)
+    pirate.write_cell(pirate.integer.400)(var.d)
+
+    pirate.print_cell_as_number(var.a)()
+    pirate.print_cell_as_number(var.b)()
+    pirate.print_cell_as_number(var.c)()
+    pirate.print_cell_as_number(var.d)()
+
+    @random.offset
+
+    pirate.copy(var.a)(var.b)
+    pirate.copy(var.d)(var.e)
 }

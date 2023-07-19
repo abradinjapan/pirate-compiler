@@ -430,8 +430,88 @@ namespace accounter {
             variable_table p_variables;
             offset_table p_offsets;
             literal_table p_literals;
-            bool has_scope;
+            bool p_has_scope;
             std::vector<statement> p_statements;
+
+            // lookup variable in variable table
+            argument lookup_variable_by_name(std::string name_value, bool& error_occured) {
+                // check for match from inputs
+                for (uint64_t input_ID = 0; input_ID < p_variables.p_inputs.size(); input_ID++) {
+                    // check for variable name
+                    if (p_variables.p_inputs[input_ID].p_name == name_value) {
+                        // match found
+                        return argument(argument_type::is_input, input_ID);
+                    }
+                }
+
+                // check for match from outputs
+                for (uint64_t output_ID = 0; output_ID < p_variables.p_outputs.size(); output_ID++) {
+                    // check for variable name
+                    if (p_variables.p_outputs[output_ID].p_name == name_value) {
+                        // match found
+                        return argument(argument_type::is_output, output_ID);
+                    }
+                }
+
+                // check for match from variables
+                for (uint64_t variable_ID = 0; variable_ID < p_variables.p_variables.size(); variable_ID++) {
+                    // check for variable name
+                    if (p_variables.p_variables[variable_ID].p_name == name_value) {
+                        // match found
+                        return argument(argument_type::is_variable, variable_ID);
+                    }
+                }
+
+                // no match found (should not be possible, but handled anyways)
+                error_occured = true;
+
+                // inform user of error
+                std::cout << "Error: Variable not found from lookup: " << name_value << std::endl;
+
+                // return invalid argument
+                return argument(argument_type::is_invalid, -1);
+            }
+
+            // lookup offset in offset table
+            argument lookup_offset_by_name(std::string name, bool& error_occured) {
+                // lookup offset
+                for (uint64_t offset_ID = 0; offset_ID < p_offsets.p_offsets.size(); offset_ID++) {
+                    // check for match
+                    if (p_offsets.p_offsets[offset_ID].p_name == name) {
+                        // match found
+                        return argument(argument_type::is_offset, offset_ID);
+                    }
+                }
+
+                // offset not found (should not be possible, but handled anyways)
+                error_occured = true;
+
+                // inform user of error
+                std::cout << "Error: Offset not found during lookup: " << name << std::endl;
+
+                // return invalid argument
+                return argument(argument_type::is_invalid, -1);
+            }
+
+            argument lookup_literal_by_ID(int statement_ID, int io_ID, bool& error_occured) {
+                // lookup literal
+                for (uint64_t literal_ID = 0; literal_ID < p_literals.p_literals.size(); literal_ID++) {
+                    // check for match
+                    if (p_literals.p_literals[literal_ID].p_statement_ID == statement_ID && p_literals.p_literals[literal_ID].p_argument_ID == io_ID) {
+                        // return match
+                        return argument(argument_type::is_integer_literal, literal_ID);
+                    }
+                }
+
+                // literal not found (should not be possible, but handled anyways)
+                error_occured = true;
+
+                // inform user of error
+                std::cout << "Error: Literal not found during lookup: [ " << statement_ID << " " << io_ID << " ]" << std::endl;
+
+                // return invalid argument
+                return argument(argument_type::is_invalid, -1);
+            }
         };
 
         class skeleton {
@@ -463,9 +543,9 @@ namespace accounter {
 
                     // check for scope
                     if (program.p_abstractions[i].p_type == parser::abstraction_type::is_code_defined) {
-                        p_abstractions[p_abstractions.size() - 1].has_scope = true;
+                        p_abstractions[p_abstractions.size() - 1].p_has_scope = true;
                     } else {
-                        p_abstractions[p_abstractions.size() - 1].has_scope = false;
+                        p_abstractions[p_abstractions.size() - 1].p_has_scope = false;
                     }
 
                     // get variable table
@@ -476,7 +556,7 @@ namespace accounter {
                         return;
                     }
 
-                    if (p_abstractions[p_abstractions.size() - 1].has_scope == true) {
+                    if (p_abstractions[p_abstractions.size() - 1].p_has_scope == true) {
                         // get offset table
                         p_abstractions[p_abstractions.size() - 1].p_offsets = get_offset_table(program.p_abstractions[i], error_occured);
 
@@ -517,7 +597,7 @@ namespace accounter {
 
                     // print tables
                     print_variable_table(p_abstractions[abstraction_ID].p_variables);
-                    if (p_abstractions[abstraction_ID].has_scope) {
+                    if (p_abstractions[abstraction_ID].p_has_scope) {
                         print_offset_table(p_abstractions[abstraction_ID].p_offsets);
                         print_literal_table(p_abstractions[abstraction_ID].p_literals);
                         print_statement_table(p_abstractions[abstraction_ID].p_statements);
@@ -535,17 +615,17 @@ namespace accounter {
                 p_abstractions.push_back(abstraction());
 
                 // setup inputs
-                for (uint64_t i = 0; i < input_count; i++) {
+                for (int64_t i = 0; i < input_count; i++) {
                     p_abstractions[p_abstractions.size() - 1].p_variables.p_inputs.push_back(variable(std::to_string(i), -2));
                 }
 
                 // setup outputs
-                for (uint64_t i = 0; i < output_count; i++) {
+                for (int64_t i = 0; i < output_count; i++) {
                     p_abstractions[p_abstractions.size() - 1].p_variables.p_outputs.push_back(variable(std::to_string(i), -1));
                 }
 
                 // setup body
-                p_abstractions[p_abstractions.size() - 1].has_scope = false;
+                p_abstractions[p_abstractions.size() - 1].p_has_scope = false;
             }
 
             // add predefined abstractions to tables
@@ -557,7 +637,7 @@ namespace accounter {
             }
 
             // lookup header in header table
-            int lookup_header(std::string header_name, bool& error_occured) {
+            int lookup_header_by_name(std::string header_name, bool& error_occured) {
                 // lookup header
                 for (uint64_t header_ID = 0; header_ID < p_header_table.p_headers.size(); header_ID++) {
                     // match found
@@ -576,86 +656,6 @@ namespace accounter {
                 return -1;
             }
 
-            // lookup variable in variable table
-            argument lookup_variable(uint64_t abstraction_ID, std::string name_value, bool& error_occured) {
-                // check for match from inputs
-                for (uint64_t input_ID = 0; input_ID < p_abstractions[abstraction_ID].p_variables.p_inputs.size(); input_ID++) {
-                    // check for variable name
-                    if (p_abstractions[abstraction_ID].p_variables.p_inputs[input_ID].p_name == name_value) {
-                        // match found
-                        return argument(argument_type::is_input, input_ID);
-                    }
-                }
-
-                // check for match from outputs
-                for (uint64_t output_ID = 0; output_ID < p_abstractions[abstraction_ID].p_variables.p_outputs.size(); output_ID++) {
-                    // check for variable name
-                    if (p_abstractions[abstraction_ID].p_variables.p_outputs[output_ID].p_name == name_value) {
-                        // match found
-                        return argument(argument_type::is_output, output_ID);
-                    }
-                }
-
-                // check for match from variables
-                for (uint64_t variable_ID = 0; variable_ID < p_abstractions[abstraction_ID].p_variables.p_variables.size(); variable_ID++) {
-                    // check for variable name
-                    if (p_abstractions[abstraction_ID].p_variables.p_variables[variable_ID].p_name == name_value) {
-                        // match found
-                        return argument(argument_type::is_variable, variable_ID);
-                    }
-                }
-
-                // no match found (should not be possible, but handled anyways)
-                error_occured = true;
-
-                // inform user of error
-                std::cout << "Error: Variable not found from lookup: " << name_value << std::endl;
-
-                // return invalid argument
-                return argument(argument_type::is_invalid, -1);
-            }
-
-            // lookup offset in offset table
-            argument lookup_offset(uint64_t abstraction_ID, std::string name, bool& error_occured) {
-                // lookup offset
-                for (uint64_t offset_ID = 0; offset_ID < p_abstractions[abstraction_ID].p_offsets.p_offsets.size(); offset_ID++) {
-                    // check for match
-                    if (p_abstractions[abstraction_ID].p_offsets.p_offsets[offset_ID].p_name == name) {
-                        // match found
-                        return argument(argument_type::is_offset, offset_ID);
-                    }
-                }
-
-                // offset not found (should not be possible, but handled anyways)
-                error_occured = true;
-
-                // inform user of error
-                std::cout << "Error: Offset not found during lookup: " << name << std::endl;
-
-                // return invalid argument
-                return argument(argument_type::is_invalid, -1);
-            }
-
-            argument lookup_literal(int abstraction_ID, int statement_ID, int io_ID, bool& error_occured) {
-                // lookup literal
-                for (uint64_t literal_ID = 0; literal_ID < p_abstractions[abstraction_ID].p_literals.p_literals.size(); literal_ID++) {
-                    // check for match
-                    if (p_abstractions[abstraction_ID].p_literals.p_literals[literal_ID].p_statement_ID == statement_ID && p_abstractions[abstraction_ID].p_literals.p_literals[literal_ID].p_argument_ID == io_ID) {
-                        // return match
-                        return argument(argument_type::is_integer_literal, literal_ID);
-                    }
-                }
-
-                // literal not found (should not be possible, but handled anyways)
-                error_occured = true;
-
-                // inform user of error
-                std::cout << "Error: Literal not found during lookup: [ " << statement_ID << " " << io_ID << " ]" << std::endl;
-
-                // return invalid argument
-                return argument(argument_type::is_invalid, -1);
-            }
-
             // get statement table
             std::vector<statement> get_statement_table(parser::abstraction& abstraction, int abstraction_ID, bool& error_occured) {
                 std::vector<statement> output;
@@ -668,7 +668,7 @@ namespace accounter {
                         output.push_back(statement());
 
                         // get statement name
-                        output[output.size() - 1].p_header_ID = lookup_header(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured);
+                        output[output.size() - 1].p_header_ID = lookup_header_by_name(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured);
 
                         // check for error
                         if (error_occured) {
@@ -682,7 +682,7 @@ namespace accounter {
                             // is variable
                             case parser::name_type::is_value_name:
                                 // look up variable
-                                output[output.size() - 1].p_inputs.push_back(lookup_variable(abstraction_ID, abstraction.p_scope[statement_ID].p_inputs[input_ID].p_name_value, error_occured));
+                                output[output.size() - 1].p_inputs.push_back(p_abstractions[abstraction_ID].lookup_variable_by_name(abstraction.p_scope[statement_ID].p_inputs[input_ID].p_name_value, error_occured));
 
                                 // check for error
                                 if (error_occured) {
@@ -693,7 +693,7 @@ namespace accounter {
                             // is offset
                             case parser::name_type::is_offset:
                                 // lookup offset
-                                output[output.size() - 1].p_inputs.push_back(lookup_offset(abstraction_ID, abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
+                                output[output.size() - 1].p_inputs.push_back(p_abstractions[abstraction_ID].lookup_offset_by_name(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
 
                                 // check for error
                                 if (error_occured) {
@@ -704,7 +704,7 @@ namespace accounter {
                             // is literal
                             case parser::name_type::is_integer_literal:
                                 // lookup literal
-                                output[output.size() - 1].p_inputs.push_back(lookup_literal(abstraction_ID, output.size() - 1, input_ID, error_occured));
+                                output[output.size() - 1].p_inputs.push_back(p_abstractions[abstraction_ID].lookup_literal_by_ID(output.size() - 1, input_ID, error_occured));
 
                                 // check for error
                                 if (error_occured) {
@@ -726,7 +726,7 @@ namespace accounter {
                             // is variable
                             case parser::name_type::is_value_name:
                                 // look up variable
-                                output[output.size() - 1].p_outputs.push_back(lookup_variable(abstraction_ID, abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_value, error_occured));
+                                output[output.size() - 1].p_outputs.push_back(p_abstractions[abstraction_ID].lookup_variable_by_name(abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_value, error_occured));
 
                                 // check for error
                                 if (error_occured) {
@@ -737,7 +737,7 @@ namespace accounter {
                             // is offset
                             case parser::name_type::is_offset:
                                 // lookup offset
-                                output[output.size() - 1].p_outputs.push_back(lookup_offset(abstraction_ID, abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
+                                output[output.size() - 1].p_outputs.push_back(p_abstractions[abstraction_ID].lookup_offset_by_name(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
 
                                 // check for error
                                 if (error_occured) {

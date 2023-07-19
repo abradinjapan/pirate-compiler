@@ -4,6 +4,7 @@
 #include "lex.cpp"
 #include "parse.cpp"
 #include "account.cpp"
+#include "generate.cpp"
 #include "run.cpp"
 
 std::string load_file(std::string file_path) {
@@ -13,13 +14,15 @@ std::string load_file(std::string file_path) {
     return content;
 }
 
-void compile(std::string user_code) {
+runner::program compile(std::string user_code) {
+    runner::program output;
     lexer::lexlings lexlings;
     parser::program parse_tree;
     accounter::skeleton::skeleton skeleton;
     bool lex_error = false;
     bool parse_error = false;
     bool accounting_error = false;
+    bool generation_error = false;
 
     // print original file
     std::cout << "Original File:" << std::endl << user_code << std::endl;
@@ -35,7 +38,7 @@ void compile(std::string user_code) {
 
     // do not proceed if error occured
     if (lex_error) {
-        return;
+        return output;
     }
 
     // parse file
@@ -46,7 +49,7 @@ void compile(std::string user_code) {
 
     // do not proceed if error occured
     if (parse_error) {
-        return;
+        return output;
     }
 
     // account program
@@ -57,10 +60,11 @@ void compile(std::string user_code) {
 
     // do not proceed if error occured
     if (accounting_error) {
-        return;
+        return output;
     }
 
-    return;
+    // generate program code
+    return generator::generate_program(skeleton, generation_error);
 }
 
 void test_runner() {
@@ -85,6 +89,21 @@ void test_runner() {
     runner::run_program(program, error_occured);
 }
 
+void compile_and_run(std::string user_code) {
+    runner::program program;
+    bool compilation_error = false;
+    bool run_time_error = false;
+
+    // compile program
+    program = compile(user_code);
+
+    // run if no errors occured
+    if (compilation_error == false) {
+        // run code
+        runner::run_program(program, run_time_error);
+    }
+}
+
 int main() {
     std::cout << "☠️ This here infernal contraption be a compiler! ARRGH!☠️ " << std::endl;
 
@@ -92,8 +111,8 @@ int main() {
     //compile(load_file("programs/test.pirate"));
     //compile(load_file("programs/test2.pirate"));
     //compile(load_file("programs/test3.pirate"));
-    compile(load_file("programs/test4.pirate"));
-    compile(load_file("programs/test5.pirate"));
+    //compile(load_file("programs/test4.pirate"));
+    compile_and_run(load_file("programs/test5.pirate"));
 
     // test runner
     test_runner();
