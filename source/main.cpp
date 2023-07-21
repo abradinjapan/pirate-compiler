@@ -67,7 +67,7 @@ runner::program compile(std::string user_code) {
     return generator::generate_program(skeleton, generation_error);
 }
 
-void test_runner() {
+/*void test_runner() {
     runner::program program;
     bool error_occured = false;
 
@@ -85,7 +85,7 @@ void test_runner() {
 
     // run program
     runner::run_program(program, error_occured);
-}
+}*/
 
 void compile_and_run(std::string user_code) {
     runner::program program;
@@ -113,7 +113,7 @@ int main() {
     compile_and_run(load_file("programs/test5.pirate"));
 
     // test runner
-    test_runner();
+    //test_runner();
 
     return 0;
 }

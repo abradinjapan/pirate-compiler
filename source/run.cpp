@@ -83,25 +83,52 @@ namespace runner {
         std::vector<instruction> p_instructions;
     };
 
-    class workspace {
-    public:
-        std::vector<instruction> p_program;
-        std::vector<offset> p_offsets;
+    enum pass_type {
+        pass_measure,
+        pass_build,
     };
 
+    class workspace {
+    public:
+        program p_program;
+        std::vector<offset> p_offsets;
+        pass_type p_pass_type;
+
+        void create_offsets(uint64_t offset_count) {
+            p_offsets.resize(offset_count);
+        }
+
+        void start_pass_measure(uint64_t offset_count) {
+            p_program = program();
+            create_offsets(offset_count);
+            p_pass_type = pass_type::pass_measure;
+        }
+
+        void start_pass_build() {
+            p_program = program();
+            p_pass_type = pass_type::pass_build;
+        }
+    };
+
+    // add offset to workspace
+    void set__offset(workspace& workspace, uint64_t offset_ID) {
+        // add offset to workspace
+        workspace.p_offsets[offset_ID] = workspace.p_program.p_instructions.size();
+    }
+
     // add quit instruction to program
-    void append__quit(program& program) {
+    void append__quit(workspace& workspace) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
         temp_instruction.p_type = instruction_type::quit;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add write cell instruction to program
-    void append__write_cell(program& program, cell value, cell_ID destination) {
+    void append__write_cell(workspace& workspace, cell value, cell_ID destination) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -110,11 +137,11 @@ namespace runner {
         temp_instruction.p_output_0 = destination;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add copy cell instruction to program
-    void append__copy_cell(program& program, cell_ID source, cell_ID destination) {
+    void append__copy_cell(workspace& workspace, cell_ID source, cell_ID destination) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -123,11 +150,11 @@ namespace runner {
         temp_instruction.p_output_0 = destination;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add print cell as number instruction to program
-    void append__print_cell_as_number(program& program, cell_ID source) {
+    void append__print_cell_as_number(workspace& workspace, cell_ID source) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -135,11 +162,11 @@ namespace runner {
         temp_instruction.p_input_0 = source;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add print cell as character instruction to program
-    void append__print_cell_as_character(program& program, cell_ID source) {
+    void append__print_cell_as_character(workspace& workspace, cell_ID source) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -147,11 +174,11 @@ namespace runner {
         temp_instruction.p_input_0 = source;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add create new context instruction to program
-    void append__create_new_context(program& program, cell context_cell_count) {
+    void append__create_new_context(workspace& workspace, cell context_cell_count) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -159,44 +186,44 @@ namespace runner {
         temp_instruction.p_write_register_value = context_cell_count;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add restore old context instruction to program
-    void append__restore_old_context(program& program) {
+    void append__restore_old_context(workspace& workspace) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
         temp_instruction.p_type = instruction_type::restore_old_context;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add clear inputs instruction to program
-    void append__clear_inputs(program& program) {
+    void append__clear_inputs(workspace& workspace) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
         temp_instruction.p_type = instruction_type::clear_inputs;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add clear outputs instruction to program
-    void append__clear_outputs(program& program) {
+    void append__clear_outputs(workspace& workspace) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
         temp_instruction.p_type = instruction_type::clear_outputs;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add pass input instruction to program
-    void append__pass_input(program& program, cell_ID source) {
+    void append__pass_input(workspace& workspace, cell_ID source) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -204,11 +231,11 @@ namespace runner {
         temp_instruction.p_input_0 = source;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add get input instruction to program
-    void append__get_input(program& program, cell_ID destination) {
+    void append__get_input(workspace& workspace, cell_ID destination) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -216,11 +243,11 @@ namespace runner {
         temp_instruction.p_output_0 = destination;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add pass output instruction to program
-    void append__pass_output(program& program, cell_ID source) {
+    void append__pass_output(workspace& workspace, cell_ID source) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -228,11 +255,11 @@ namespace runner {
         temp_instruction.p_input_0 = source;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add get output instruction to program
-    void append__get_output(program& program, cell_ID destination) {
+    void append__get_output(workspace& workspace, cell_ID destination) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -240,11 +267,11 @@ namespace runner {
         temp_instruction.p_output_0 = destination;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // add jump to instruction to program (jumps to the instruction in the program array specified in 'source')
-    void append__jump_to(program& program, cell_ID source) {
+    void append__jump_to(workspace& workspace, cell_ID source) {
         instruction temp_instruction = instruction();
 
         // setup instruction parameters
@@ -252,7 +279,7 @@ namespace runner {
         temp_instruction.p_input_0 = source;
 
         // create new instruction
-        program.p_instructions.push_back(temp_instruction);
+        workspace.p_program.p_instructions.push_back(temp_instruction);
     }
 
     // run a program

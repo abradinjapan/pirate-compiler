@@ -1,10 +1,5 @@
 #pragma once
 
-/* Notes */
-/*
-    The goal of this file is to map out the code from strings to integer representations.
-*/
-
 #include "parse.cpp"
 
 #include <vector>
@@ -311,6 +306,8 @@ namespace accounter {
 
     offset_table get_offset_table(parser::abstraction& abstraction, bool& error_occured) {
         offset_table output;
+        uint64_t abstraction_call_ID = 0;
+        uint64_t offset_ID = 0;
 
         // for each statement
         for (uint64_t statement_ID = 0; statement_ID < abstraction.p_scope.size(); statement_ID++) {
@@ -328,8 +325,15 @@ namespace accounter {
                     return output;
                 }
 
-                // otherwise declare variable
-                output.p_offsets.push_back(offset(abstraction.p_scope[statement_ID].p_name.p_name_value, statement_ID));
+                // otherwise declare offset
+                output.p_offsets.push_back(offset(abstraction.p_scope[statement_ID].p_name.p_name_value, abstraction_call_ID));
+
+                // next offset
+                offset_ID++;
+            // if the statement type is an abstraction call ID, advance to the next one
+            } else if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_abstraction_call) {
+                // next abstraction call
+                abstraction_call_ID++;
             }
         }
 
