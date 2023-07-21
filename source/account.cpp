@@ -634,6 +634,7 @@ namespace accounter {
                 synthesize_header_only_abstraction("pirate.write_cell", 1, 1);
                 synthesize_header_only_abstraction("pirate.copy", 1, 1);
                 synthesize_header_only_abstraction("pirate.print_cell_as_number", 1, 0);
+                synthesize_header_only_abstraction("pirate.print_cell_as_character", 1, 0);
             }
 
             // lookup header in header table

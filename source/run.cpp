@@ -48,7 +48,6 @@ namespace runner {
         pass_output,
         get_output,
         jump_to,
-        jump_offset,
     };
 
     class instruction {
@@ -57,14 +56,12 @@ namespace runner {
         cell p_write_register_value;
         cell_ID p_input_0;
         cell_ID p_output_0;
-        int p_offset_ID;
 
         instruction() {
             p_type = instruction_type::quit;
             p_write_register_value = 0;
             p_input_0 = 0;
             p_output_0 = 0;
-            p_offset_ID = 0;
         }
     };
 
@@ -84,6 +81,11 @@ namespace runner {
     class program {
     public:
         std::vector<instruction> p_instructions;
+    };
+
+    class workspace {
+    public:
+        std::vector<instruction> p_program;
         std::vector<offset> p_offsets;
     };
 
@@ -253,24 +255,6 @@ namespace runner {
         program.p_instructions.push_back(temp_instruction);
     }
 
-    // add jump offset instruction to program
-    void append__jump_offset(program& program, int offset_ID) {
-        instruction temp_instruction = instruction();
-
-        // setup instruction parameters
-        temp_instruction.p_type = instruction_type::jump_offset;
-        temp_instruction.p_offset_ID = offset_ID;
-
-        // create new instruction
-        program.p_instructions.push_back(temp_instruction);
-    }
-
-    // add offset to program
-    void append__offset(program& program) {
-        // get offset
-        program.p_offsets.push_back(offset(program.p_instructions.size()));
-    }
-
     // run a program
     buffer run_program(program program, bool& error_occured) {
         buffer output;
@@ -395,11 +379,6 @@ namespace runner {
             case instruction_type::jump_to:
                 // jump
                 current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
-
-                break;
-            case instruction_type::jump_offset:
-                // jump
-                current_instruction = program.p_offsets[program.p_instructions[current_instruction].p_offset_ID].p_instruction_ID;
 
                 break;
             default:

@@ -34,6 +34,10 @@ namespace generator {
         } else if (abstraction.p_statements[statement_ID].p_header_ID == 2) {
             // write code
             runner::append__print_cell_as_number(program, calculate_variable_index(abstraction, abstraction.p_statements[statement_ID].p_inputs[0]));
+        // generate statement as pirate.print_cell_as_character(1)(0)
+        } else if (abstraction.p_statements[statement_ID].p_header_ID == 3) {
+            // write code
+            runner::append__print_cell_as_character(program, calculate_variable_index(abstraction, abstraction.p_statements[statement_ID].p_inputs[0]));
         }
     }
 

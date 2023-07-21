@@ -3,14 +3,15 @@ sail()() = {
     pirate.write_cell(pirate.integer.200)(var.b)
     pirate.write_cell(pirate.integer.300)(var.c)
     pirate.write_cell(pirate.integer.400)(var.d)
+    pirate.write_cell(pirate.integer.10)(new_line)
 
     pirate.print_cell_as_number(var.a)()
-    pirate.print_cell_as_number(var.b)()
-    pirate.print_cell_as_number(var.c)()
-    pirate.print_cell_as_number(var.d)()
+    pirate.print_cell_as_character(new_line)()
 
     @random.offset
 
     pirate.copy(var.a)(var.b)
     pirate.copy(var.d)(var.e)
+    pirate.print_cell_as_number(var.e)()
+    pirate.print_cell_as_character(new_line)()
 }
