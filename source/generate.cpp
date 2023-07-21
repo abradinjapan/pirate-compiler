@@ -20,29 +20,30 @@ namespace generator {
         }
     }
 
-    void generate_statement(runner::workspace& workspace, accounter::skeleton::abstraction& abstraction, uint64_t statement_ID, bool& error_occured) {
+    void generate_statement(runner::workspace& workspace, accounter::skeleton::abstraction& abstraction, uint64_t statement_ID, uint64_t call_ID, bool& error_occured) {
         // try to generate it as an instruction
         // generate it as a pirate.write_cell(1)(1)
-        if (abstraction.p_statements[statement_ID].p_header_ID == 0) {
+        if (abstraction.p_calls[call_ID].p_header_ID == 0) {
             // write code
-            runner::append__write_cell(workspace, abstraction.p_literals.p_literals[abstraction.lookup_literal_by_ID(statement_ID, 0, error_occured).p_ID].p_integer_value, calculate_variable_index(abstraction, abstraction.p_statements[statement_ID].p_outputs[0]));
+            runner::append__write_cell(workspace, abstraction.p_literals.p_literals[abstraction.lookup_literal_by_ID(statement_ID, 0, error_occured).p_ID].p_integer_value, calculate_variable_index(abstraction, abstraction.p_calls[call_ID].p_outputs[0]));
         // generate statement as pirate.copy(1)(1)
-        } else if (abstraction.p_statements[statement_ID].p_header_ID == 1) {
+        } else if (abstraction.p_calls[call_ID].p_header_ID == 1) {
             // write code
-            runner::append__copy_cell(workspace, calculate_variable_index(abstraction, abstraction.p_statements[statement_ID].p_inputs[0]), calculate_variable_index(abstraction, abstraction.p_statements[statement_ID].p_outputs[0]));
+            runner::append__copy_cell(workspace, calculate_variable_index(abstraction, abstraction.p_calls[call_ID].p_inputs[0]), calculate_variable_index(abstraction, abstraction.p_calls[call_ID].p_outputs[0]));
         // generate statement as pirate.print_cell_as_number(1)(0)
-        } else if (abstraction.p_statements[statement_ID].p_header_ID == 2) {
+        } else if (abstraction.p_calls[call_ID].p_header_ID == 2) {
             // write code
-            runner::append__print_cell_as_number(workspace, calculate_variable_index(abstraction, abstraction.p_statements[statement_ID].p_inputs[0]));
+            runner::append__print_cell_as_number(workspace, calculate_variable_index(abstraction, abstraction.p_calls[call_ID].p_inputs[0]));
         // generate statement as pirate.print_cell_as_character(1)(0)
-        } else if (abstraction.p_statements[statement_ID].p_header_ID == 3) {
+        } else if (abstraction.p_calls[call_ID].p_header_ID == 3) {
             // write code
-            runner::append__print_cell_as_character(workspace, calculate_variable_index(abstraction, abstraction.p_statements[statement_ID].p_inputs[0]));
+            runner::append__print_cell_as_character(workspace, calculate_variable_index(abstraction, abstraction.p_calls[call_ID].p_inputs[0]));
         }
     }
 
     void generate_abstraction(runner::workspace& workspace, accounter::skeleton::abstraction& abstraction, bool& error_occured) {
         uint64_t variable_count;
+        uint64_t call_index;
 
         // determine variable count
         variable_count = abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + abstraction.p_variables.p_variables.size();
@@ -59,10 +60,19 @@ namespace generator {
             }
         }
 
+        // set call index
+        call_index = 0;
+
         // generate function body
-        for (uint64_t statement_ID = 0; statement_ID < abstraction.p_statements.size(); statement_ID++) {
+        for (uint64_t statement_ID = 0; statement_ID < abstraction.p_statement_map.size(); statement_ID++) {
             // generate statement
-            generate_statement(workspace, abstraction, statement_ID, error_occured);
+            if (abstraction.p_statement_map[statement_ID] == accounter::skeleton::statement_type::is_call_statement) {
+                // write code
+                generate_statement(workspace, abstraction, statement_ID, call_index, error_occured);
+
+                // next call index
+                call_index++;
+            }
         }
 
         // generate function epilogue

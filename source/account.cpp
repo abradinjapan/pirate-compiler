@@ -422,11 +422,17 @@ namespace accounter {
             }
         };
 
-        class statement {
+        class call {
         public:
             int p_header_ID;
             std::vector<argument> p_inputs;
             std::vector<argument> p_outputs;
+        };
+
+        enum statement_type {
+            is_call_statement,
+            is_offset_statement,
+            is_invalid_statement,
         };
 
         class abstraction {
@@ -435,7 +441,8 @@ namespace accounter {
             offset_table p_offsets;
             literal_table p_literals;
             bool p_has_scope;
-            std::vector<statement> p_statements;
+            std::vector<call> p_calls;
+            std::vector<statement_type> p_statement_map;
 
             // lookup variable in variable table
             argument lookup_variable_by_name(std::string name_value, bool& error_occured) {
@@ -577,8 +584,16 @@ namespace accounter {
                             return;
                         }
 
-                        // get statement table
-                        p_abstractions[p_abstractions.size() - 1].p_statements = get_statement_table(program.p_abstractions[i], p_abstractions.size() - 1, error_occured);
+                        // get call table
+                        p_abstractions[p_abstractions.size() - 1].p_calls = get_call_table(program.p_abstractions[i], p_abstractions.size() - 1, error_occured);
+
+                        // check for error
+                        if (error_occured) {
+                            return;
+                        }
+
+                        // get statement map
+                        p_abstractions[p_abstractions.size() - 1].p_statement_map = get_statement_map(program.p_abstractions[i], error_occured);
 
                         // check for error
                         if (error_occured) {
@@ -604,7 +619,7 @@ namespace accounter {
                     if (p_abstractions[abstraction_ID].p_has_scope) {
                         print_offset_table(p_abstractions[abstraction_ID].p_offsets);
                         print_literal_table(p_abstractions[abstraction_ID].p_literals);
-                        print_statement_table(p_abstractions[abstraction_ID].p_statements);
+                        print_call_table(p_abstractions[abstraction_ID].p_calls);
                     }
                 }
             }
@@ -662,15 +677,15 @@ namespace accounter {
             }
 
             // get statement table
-            std::vector<statement> get_statement_table(parser::abstraction& abstraction, int abstraction_ID, bool& error_occured) {
-                std::vector<statement> output;
+            std::vector<call> get_call_table(parser::abstraction& abstraction, int abstraction_ID, bool& error_occured) {
+                std::vector<call> output;
 
                 // get each abstraction call statement
                 for (uint64_t statement_ID = 0; statement_ID < abstraction.p_scope.size(); statement_ID++) {
                     // make sure that the statement is an abstraction call
                     if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_abstraction_call) {
                         // create new abstraction call statement
-                        output.push_back(statement());
+                        output.push_back(call());
 
                         // get statement name
                         output[output.size() - 1].p_header_ID = lookup_header_by_name(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured);
@@ -709,7 +724,7 @@ namespace accounter {
                             // is literal
                             case parser::name_type::is_integer_literal:
                                 // lookup literal
-                                output[output.size() - 1].p_inputs.push_back(p_abstractions[abstraction_ID].lookup_literal_by_ID(output.size() - 1, input_ID, error_occured));
+                                output[output.size() - 1].p_inputs.push_back(p_abstractions[abstraction_ID].lookup_literal_by_ID(statement_ID, input_ID, error_occured));
 
                                 // check for error
                                 if (error_occured) {
@@ -739,17 +754,6 @@ namespace accounter {
                                 }
 
                                 break;
-                            // is offset
-                            case parser::name_type::is_offset:
-                                // lookup offset
-                                output[output.size() - 1].p_outputs.push_back(p_abstractions[abstraction_ID].lookup_offset_by_name(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
-
-                                // check for error
-                                if (error_occured) {
-                                    return output;
-                                }
-
-                                break;
                             // not valid
                             default:
                                 std::cout << "Error: Illegal name type in statement outputs." << std::endl;
@@ -760,6 +764,31 @@ namespace accounter {
                 }
 
                 // success
+                return output;
+            }
+
+            // get statement map
+            std::vector<statement_type> get_statement_map(parser::abstraction& abstraction, bool& error_occured) {
+                std::vector<statement_type> output;
+
+                // get each statement type
+                for (uint64_t statement_ID = 0; statement_ID < abstraction.p_scope.size(); statement_ID++) {
+                    // check for the statement type
+                    if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_abstraction_call) {
+                        output.push_back(statement_type::is_call_statement);
+                    } else if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_offset_declaration) {
+                        output.push_back(statement_type::is_offset_statement);
+                    } else {
+                        output.push_back(statement_type::is_invalid_statement);
+
+                        error_occured = true;
+
+                        std::cout << "Error: Invalid statement type while creating map." << std::endl;
+
+                        return output;
+                    }
+                }
+
                 return output;
             }
 
@@ -812,7 +841,7 @@ namespace accounter {
             }
 
             // print statement table
-            void print_statement_table(std::vector<statement>& table) {
+            void print_call_table(std::vector<call>& table) {
                 // print header
                 std::cout << "\tStatement Table:" << std::endl;
 
@@ -854,7 +883,7 @@ namespace accounter {
 
                     // print empty marker if there are no inputs
                     if (table[i].p_inputs.size() == 0) {
-                        std::cout << "[empty]";
+                        std::cout << "[ empty ]";
                     }
 
                     // continue statement header
@@ -892,7 +921,7 @@ namespace accounter {
 
                     // print empty marker if there are no outputs
                     if (table[i].p_outputs.size() == 0) {
-                        std::cout << "[empty]";
+                        std::cout << "[ empty ]";
                     }
 
                     // finish statement header

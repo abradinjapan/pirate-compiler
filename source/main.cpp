@@ -64,7 +64,12 @@ runner::program compile(std::string user_code) {
     }
 
     // generate program code
-    return generator::generate_program(skeleton, generation_error);
+    output = generator::generate_program(skeleton, generation_error);
+
+    // print code
+    print_program(output);
+
+    return output;
 }
 
 /*void test_runner() {
@@ -99,6 +104,8 @@ void compile_and_run(std::string user_code) {
     if (compilation_error == false) {
         // run code
         runner::run_program(program, run_time_error);
+    } else {
+        std::cout << "Code not run, compilation error." << std::endl;
     }
 }
 

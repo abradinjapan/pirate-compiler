@@ -1,4 +1,5 @@
 sail()() = {
+    @test.offset.1
     pirate.write_cell(pirate.integer.100)(var.a)
     pirate.write_cell(pirate.integer.200)(var.b)
     pirate.write_cell(pirate.integer.300)(var.c)
@@ -14,7 +15,7 @@ sail()() = {
     pirate.copy(var.d)(var.e)
     pirate.print_cell_as_number(var.e)()
 
-    @test.offset.1
-
     pirate.print_cell_as_character(new_line)()
+
+    @test.offset.2
 }

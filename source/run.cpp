@@ -419,4 +419,18 @@ namespace runner {
 
         return output;
     }
+
+    // print program
+    void print_program(program& program) {
+        // print header
+        std::cout << "Instructions:" << std::endl;
+
+        // print instructions
+        for (uint64_t i = 0; i < program.p_instructions.size(); i++) {
+            // print instruction
+            std::cout << "\t" << program.p_instructions[i].p_type << std::endl;
+        }
+
+        return;
+    }
 }
