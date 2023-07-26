@@ -65,59 +65,150 @@ namespace runner {
         }
     };
 
-    class offset {
-    public:
-        int p_instruction_ID;
-
-        offset() {
-            p_instruction_ID = 0;
-        }
-
-        offset(int instruction_ID) {
-            p_instruction_ID = instruction_ID;
-        }
-    };
-
-    class offsets {
-    public:
-        runner::offset p_start;
-        std::vector<runner::offset> p_code_defined_offsets;
-        runner::offset p_end;
-    };
-
     class program {
     public:
         std::vector<instruction> p_instructions;
     };
 
-    enum pass_type {
-        pass_measure,
-        pass_build,
-    };
+    // run a program
+    buffer run_program(program program, bool& error_occured) {
+        buffer output;
+        bool running = true;
+        int current_instruction = 0;
+        std::vector<context> context_stack;
+        buffer inputs;
+        buffer outputs;
 
-    class workspace {
-    public:
-        program p_program;
-        std::vector<offsets> p_abstraction_offsets;
-        pass_type p_pass_type;
+        // process instructions
+        while (running == true) {
+            // process instruction
+            switch (program.p_instructions[current_instruction].p_type) {
+            case instruction_type::quit:
+                current_instruction++;
 
-        void start_pass_measure(uint64_t abstraction_count) {
-            p_program = program();
-            p_abstraction_offsets.reserve(abstraction_count);
-            p_pass_type = pass_type::pass_measure;
+                running = false;
+
+                break;
+            case instruction_type::write_cell:
+                // write data
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = program.p_instructions[current_instruction].p_write_register_value;
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::copy_cell:
+                // copy data
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::print_cell_as_number:
+                // print
+                std::cout << context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::print_cell_as_character:
+                // print
+                putchar((char)context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::create_new_context:
+                // push a new context onto the stack
+                context_stack.push_back(context(program.p_instructions[current_instruction].p_write_register_value));
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::restore_old_context:
+                // restore the previous context
+                context_stack.pop_back();
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::clear_inputs:
+                // clear inputs
+                inputs.p_cells.clear();
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::clear_outputs:
+                // clear inputs
+                outputs.p_cells.clear();
+
+                // next instruction
+                current_instruction++;
+                
+                break;
+            case instruction_type::pass_input:
+                // add input
+                inputs.p_cells.push_back(context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::get_input:
+                // retrieve input
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = inputs.p_cells[inputs.p_cells.size() - 1];
+
+                // clear last input
+                inputs.p_cells.pop_back();
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::pass_output:
+                // add output
+                outputs.p_cells.push_back(context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::get_output:
+                // retrieve output
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = outputs.p_cells[outputs.p_cells.size() - 1];
+
+                // clear last output
+                outputs.p_cells.pop_back();
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::jump_to:
+                // jump
+                current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
+
+                break;
+            default:
+                std::cout << "Runner Error: Invalid Instruction ID" << std::endl;
+
+                error_occured = true;
+
+                break;
+            }
         }
 
-        void start_pass_build() {
-            p_program = program();
-            p_pass_type = pass_type::pass_build;
-        }
+        return output;
+    }
 
-        uint64_t get_offset() {
-            return p_program.p_instructions.size();
-        }
-    };
-
-    // add quit instruction to program
+    /*// add quit instruction to program
     void append__quit(workspace& workspace) {
         instruction temp_instruction = instruction();
 
@@ -281,145 +372,7 @@ namespace runner {
 
         // create new instruction
         workspace.p_program.p_instructions.push_back(temp_instruction);
-    }
-
-    // run a program
-    buffer run_program(program program, bool& error_occured) {
-        buffer output;
-        bool running = true;
-        int current_instruction = 0;
-        std::vector<context> context_stack;
-        buffer inputs;
-        buffer outputs;
-
-        // process instructions
-        while (running == true) {
-            // process instruction
-            switch (program.p_instructions[current_instruction].p_type) {
-            case instruction_type::quit:
-                current_instruction++;
-
-                running = false;
-
-                break;
-            case instruction_type::write_cell:
-                // write data
-                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = program.p_instructions[current_instruction].p_write_register_value;
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::copy_cell:
-                // copy data
-                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::print_cell_as_number:
-                // print
-                std::cout << context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::print_cell_as_character:
-                // print
-                putchar((char)context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::create_new_context:
-                // push a new context onto the stack
-                context_stack.push_back(context(program.p_instructions[current_instruction].p_write_register_value));
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::restore_old_context:
-                // restore the previous context
-                context_stack.pop_back();
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::clear_inputs:
-                // clear inputs
-                inputs.p_cells.clear();
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::clear_outputs:
-                // clear inputs
-                outputs.p_cells.clear();
-
-                // next instruction
-                current_instruction++;
-                
-                break;
-            case instruction_type::pass_input:
-                // add input
-                inputs.p_cells.push_back(context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::get_input:
-                // retrieve input
-                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = inputs.p_cells[inputs.p_cells.size() - 1];
-
-                // clear last input
-                inputs.p_cells.pop_back();
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::pass_output:
-                // add output
-                outputs.p_cells.push_back(context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::get_output:
-                // retrieve output
-                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = outputs.p_cells[outputs.p_cells.size() - 1];
-
-                // clear last output
-                outputs.p_cells.pop_back();
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::jump_to:
-                // jump
-                current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
-
-                break;
-            default:
-                std::cout << "Runner Error: Invalid Instruction ID" << std::endl;
-
-                error_occured = true;
-
-                break;
-            }
-        }
-
-        return output;
-    }
+    }*/
 
     // print program
     void print_program(program& program) {
