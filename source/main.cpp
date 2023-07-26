@@ -14,7 +14,7 @@ std::string load_file(std::string file_path) {
     return content;
 }
 
-runner::program compile(std::string user_code) {
+runner::program compile(std::string user_code, bool& compilation_error) {
     runner::program output;
     lexer::lexlings lexlings;
     parser::program parse_tree;
@@ -38,6 +38,8 @@ runner::program compile(std::string user_code) {
 
     // do not proceed if error occured
     if (lex_error) {
+        compilation_error = true;
+
         return output;
     }
 
@@ -49,6 +51,8 @@ runner::program compile(std::string user_code) {
 
     // do not proceed if error occured
     if (parse_error) {
+        compilation_error = true;
+
         return output;
     }
 
@@ -60,6 +64,8 @@ runner::program compile(std::string user_code) {
 
     // do not proceed if error occured
     if (accounting_error) {
+        compilation_error = true;
+
         return output;
     }
 
@@ -68,6 +74,13 @@ runner::program compile(std::string user_code) {
 
     // print code
     print_program(output);
+    
+    // do not proceed if error occured
+    if (generation_error) {
+        compilation_error = true;
+        
+        return output;
+    }
 
     return output;
 }
@@ -98,7 +111,7 @@ void compile_and_run(std::string user_code) {
     bool run_time_error = false;
 
     // compile program
-    program = compile(user_code);
+    program = compile(user_code, compilation_error);
 
     // run if no errors occured
     if (compilation_error == false) {
@@ -118,6 +131,7 @@ int main() {
     //compile(load_file("programs/test3.pirate"));
     //compile(load_file("programs/test4.pirate"));
     compile_and_run(load_file("programs/test5.pirate"));
+    //compile_and_run(load_file("programs/test6.pirate"));
 
     // test runner
     //test_runner();

@@ -78,6 +78,13 @@ namespace runner {
         }
     };
 
+    class offsets {
+    public:
+        runner::offset p_start;
+        std::vector<runner::offset> p_code_defined_offsets;
+        runner::offset p_end;
+    };
+
     class program {
     public:
         std::vector<instruction> p_instructions;
@@ -91,16 +98,12 @@ namespace runner {
     class workspace {
     public:
         program p_program;
-        std::vector<offset> p_offsets;
+        std::vector<offsets> p_abstraction_offsets;
         pass_type p_pass_type;
 
-        void create_offsets(uint64_t offset_count) {
-            p_offsets.resize(offset_count);
-        }
-
-        void start_pass_measure(uint64_t offset_count) {
+        void start_pass_measure(uint64_t abstraction_count) {
             p_program = program();
-            create_offsets(offset_count);
+            p_abstraction_offsets.reserve(abstraction_count);
             p_pass_type = pass_type::pass_measure;
         }
 
@@ -108,13 +111,11 @@ namespace runner {
             p_program = program();
             p_pass_type = pass_type::pass_build;
         }
-    };
 
-    // add offset to workspace
-    void set__offset(workspace& workspace, uint64_t offset_ID) {
-        // add offset to workspace
-        workspace.p_offsets[offset_ID] = workspace.p_program.p_instructions.size();
-    }
+        uint64_t get_offset() {
+            return p_program.p_instructions.size();
+        }
+    };
 
     // add quit instruction to program
     void append__quit(workspace& workspace) {

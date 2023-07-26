@@ -435,6 +435,17 @@ namespace accounter {
             is_invalid_statement,
         };
 
+        class statement {
+        public:
+            statement_type p_type;
+            int p_ID;
+
+            statement(statement_type type, int ID) {
+                p_type = type;
+                p_ID = ID;
+            }
+        };
+
         class abstraction {
         public:
             variable_table p_variables;
@@ -442,7 +453,7 @@ namespace accounter {
             literal_table p_literals;
             bool p_has_scope;
             std::vector<call> p_calls;
-            std::vector<statement_type> p_statement_map;
+            std::vector<statement> p_statement_map;
 
             // lookup variable in variable table
             argument lookup_variable_by_name(std::string name_value, bool& error_occured) {
@@ -620,6 +631,7 @@ namespace accounter {
                         print_offset_table(p_abstractions[abstraction_ID].p_offsets);
                         print_literal_table(p_abstractions[abstraction_ID].p_literals);
                         print_call_table(p_abstractions[abstraction_ID].p_calls);
+                        print_statement_map(p_abstractions[abstraction_ID].p_statement_map);
                     }
                 }
             }
@@ -650,10 +662,12 @@ namespace accounter {
             // add predefined abstractions to tables
             void add_predefined_abstractions() {
                 // add predefined abstractions to header table
+                synthesize_header_only_abstraction("pirate.quit", 0, 0);
                 synthesize_header_only_abstraction("pirate.write_cell", 1, 1);
                 synthesize_header_only_abstraction("pirate.copy", 1, 1);
                 synthesize_header_only_abstraction("pirate.print_cell_as_number", 1, 0);
                 synthesize_header_only_abstraction("pirate.print_cell_as_character", 1, 0);
+                synthesize_header_only_abstraction("pirate.jump_to", 1, 0);
             }
 
             // lookup header in header table
@@ -713,7 +727,7 @@ namespace accounter {
                             // is offset
                             case parser::name_type::is_offset:
                                 // lookup offset
-                                output[output.size() - 1].p_inputs.push_back(p_abstractions[abstraction_ID].lookup_offset_by_name(abstraction.p_scope[statement_ID].p_name.p_name_value, error_occured));
+                                output[output.size() - 1].p_inputs.push_back(p_abstractions[abstraction_ID].lookup_offset_by_name(abstraction.p_scope[statement_ID].p_inputs[input_ID].p_name_value, error_occured));
 
                                 // check for error
                                 if (error_occured) {
@@ -768,18 +782,28 @@ namespace accounter {
             }
 
             // get statement map
-            std::vector<statement_type> get_statement_map(parser::abstraction& abstraction, bool& error_occured) {
-                std::vector<statement_type> output;
+            std::vector<statement> get_statement_map(parser::abstraction& parser_abstraction, bool& error_occured) {
+                std::vector<statement> output;
+                uint64_t call_index = 0;
+                uint64_t offset_index = 0;
 
                 // get each statement type
-                for (uint64_t statement_ID = 0; statement_ID < abstraction.p_scope.size(); statement_ID++) {
+                for (uint64_t statement_ID = 0; statement_ID < parser_abstraction.p_scope.size(); statement_ID++) {
                     // check for the statement type
-                    if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_abstraction_call) {
-                        output.push_back(statement_type::is_call_statement);
-                    } else if (abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_offset_declaration) {
-                        output.push_back(statement_type::is_offset_statement);
+                    if (parser_abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_abstraction_call) {
+                        // add the call statement
+                        output.push_back(statement(statement_type::is_call_statement, call_index));
+
+                        // next call
+                        call_index++;
+                    } else if (parser_abstraction.p_scope[statement_ID].p_type == parser::statement_type::is_offset_declaration) {
+                        // add the offset statement
+                        output.push_back(statement(statement_type::is_offset_statement, offset_index));
+
+                        // next offset
+                        offset_index++;
                     } else {
-                        output.push_back(statement_type::is_invalid_statement);
+                        output.push_back(statement(statement_type::is_invalid_statement, statement_ID));
 
                         error_occured = true;
 
@@ -840,10 +864,10 @@ namespace accounter {
                 }
             }
 
-            // print statement table
+            // print call table
             void print_call_table(std::vector<call>& table) {
                 // print header
-                std::cout << "\tStatement Table:" << std::endl;
+                std::cout << "\tCall Table:" << std::endl;
 
                 // print statements
                 for (uint64_t i = 0; i < table.size(); i++) {
@@ -926,6 +950,27 @@ namespace accounter {
 
                     // finish statement header
                     std::cout << std::endl;
+                }
+            }
+
+            // print statement map
+            void print_statement_map(std::vector<statement>& statements) {
+                // print header
+                std::cout << "\tStatement Map:" << std::endl;
+
+                // print statements
+                for (uint64_t statement_ID = 0; statement_ID < statements.size(); statement_ID++) {
+                    // print indentation
+                    std::cout << "\t\t";
+
+                    // print statement based on type
+                    if (statements[statement_ID].p_type == accounter::skeleton::statement_type::is_call_statement) {
+                        // print as call
+                        std::cout << "Call [ " << statements[statement_ID].p_ID << " ]" << std::endl;
+                    } else if (statements[statement_ID].p_type == accounter::skeleton::statement_type::is_offset_statement) {
+                        // print as offset
+                        std::cout << "Offset [ " << statements[statement_ID].p_ID << " ]" << std::endl;
+                    }
                 }
             }
         };
