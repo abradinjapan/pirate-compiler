@@ -1,11 +1,15 @@
 sail()() = {
     pirate.write_cell(pirate.integer.1000)(var.a)
+    pirate.write_cell(pirate.integer.10)(new_line)
 
     pirate.write_cell(@offset.test)(offset)
 
     @offset.test
 
     pirate.print_cell_as_number(var.a)()
+    pirate.print_cell_as_character(new_line)()
 
     pirate.jump_to(offset)()
+
+    pirate.quit()()
 }

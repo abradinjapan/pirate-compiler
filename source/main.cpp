@@ -131,7 +131,7 @@ int main() {
     //compile(load_file("programs/test3.pirate"));
     //compile(load_file("programs/test4.pirate"));
     compile_and_run(load_file("programs/test5.pirate"));
-    //compile_and_run(load_file("programs/test6.pirate"));
+    compile_and_run(load_file("programs/test6.pirate"));
 
     // test runner
     //test_runner();

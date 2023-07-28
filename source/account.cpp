@@ -449,9 +449,9 @@ namespace accounter {
         class abstraction {
         public:
             variable_table p_variables;
+            bool p_has_scope;
             offset_table p_offsets;
             literal_table p_literals;
-            bool p_has_scope;
             std::vector<call> p_calls;
             std::vector<statement> p_statement_map;
 
@@ -667,6 +667,14 @@ namespace accounter {
                 synthesize_header_only_abstraction("pirate.copy", 1, 1);
                 synthesize_header_only_abstraction("pirate.print_cell_as_number", 1, 0);
                 synthesize_header_only_abstraction("pirate.print_cell_as_character", 1, 0);
+                synthesize_header_only_abstraction("pirate.create_new_context", 0, 0);
+                synthesize_header_only_abstraction("pirate.restore_old_context", 0, 0);
+                synthesize_header_only_abstraction("pirate.clear_inputs", 0, 0);
+                synthesize_header_only_abstraction("pirate.clear_outputs", 0, 0);
+                synthesize_header_only_abstraction("pirate.pass_input", 1, 0);
+                synthesize_header_only_abstraction("pirate.get_input", 0, 1);
+                synthesize_header_only_abstraction("pirate.pass_output", 1, 0);
+                synthesize_header_only_abstraction("pirate.get_output", 0, 1);
                 synthesize_header_only_abstraction("pirate.jump_to", 1, 0);
             }
 

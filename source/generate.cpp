@@ -8,7 +8,7 @@
 namespace generator {
     class offset {
     public:
-        int p_instruction_ID;
+        uint64_t p_instruction_ID;
 
         offset() {
             p_instruction_ID = 0;
@@ -22,7 +22,6 @@ namespace generator {
     class offsets {
     public:
         offset p_start;
-        offset p_end;
         std::vector<offset> p_code_defined_offsets;
     };
 
@@ -39,22 +38,31 @@ namespace generator {
         pass_type p_pass_type;
 
         void start_pass_measure(uint64_t abstraction_count) {
+            // DEBUG
+            std::cout << "Starting pass measure, abstraction count: " << abstraction_count << std::endl;
+
             p_abstraction_offsets.resize(abstraction_count);
             p_pass_type = pass_type::pass_measure;
             p_instruction_count = 0;
         }
 
         void finish_pass_measure() {
+            // DEBUG
+            std::cout << "Finishing pass measure." << std::endl;
+
             p_program.p_instructions.resize(p_instruction_count);
         }
 
         void start_pass_build() {
+            // DEBUG
+            std::cout << "Starting pass build." << std::endl;
+
             p_instruction_count = 0;
             p_pass_type = pass_type::pass_build;
         }
 
         uint64_t get_offset() {
-            return p_program.p_instructions.size();
+            return p_instruction_count;
         }
     };
 
@@ -177,52 +185,45 @@ namespace generator {
             // next instruction
             workspace.p_instruction_count++;
         }
-    }
 
-    int calculate_variable_index(accounter::skeleton::abstraction& abstraction, accounter::skeleton::argument& argument) {
-        // calculate variable ID based on type and index
-        if (argument.p_type == accounter::skeleton::argument_type::is_input) {
-            // calculate input variable index
-            return argument.p_ID;
-        } else if (argument.p_type == accounter::skeleton::argument_type::is_output) {
-            // calculate output variable index
-            return abstraction.p_variables.p_inputs.size() + argument.p_ID;
-        } else {
-            // calculate variable index
-            return abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + argument.p_ID;
+        void write__jump_to(workspace& workspace, runner::cell_ID source) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::jump_to;
+                temp_instruction.p_input_0 = source;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
         }
     }
 
     void generate_abstraction(workspace& workspace, accounter::skeleton::abstraction& abstraction, uint64_t abstraction_ID, bool& error_occured) {
         uint64_t variable_count;
-        uint64_t call_index;
 
         // determine variable count
-        variable_count = abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + abstraction.p_variables.p_variables.size() + 1/* Return Instruction Variable */;
+        variable_count = abstraction.p_variables.p_variables.size();
 
-        // generate function prologue
-        // create function start offset
+        // setup offsets container
         if (workspace.p_pass_type == pass_type::pass_measure) {
-            // setup abstraction container
-            workspace.p_abstraction_offsets.push_back(offsets());
-
-            // setup offset
+            workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets.resize(abstraction.p_offsets.p_offsets.size());
+        
+            // setup function start offset
             workspace.p_abstraction_offsets[abstraction_ID].p_start = workspace.get_offset();
+        // DEBUG
+        } else {
+            std::cout << "Offset Count: " << workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets.size() << std::endl;
         }
 
+        // generate function prologue
         // create context
         write_instructions::write__create_new_context(workspace, variable_count);
-
-        /*// get variables in reverse order
-        if (abstraction.p_variables.p_inputs.size() > 0) {
-            for (int64_t input_ID = abstraction.p_variables.p_inputs.size() - 1; input_ID >= 0; input_ID--) {
-                // get input
-                runner::append__get_input(workspace, input_ID);
-            }
-        }*/
-
-        // set call index
-        call_index = 0;
 
         // generate function body
         for (uint64_t statement_ID = 0; statement_ID < abstraction.p_statement_map.size(); statement_ID++) {
@@ -240,27 +241,46 @@ namespace generator {
                 case runner::instruction_type::write_cell:
                     // determine type of input
                     if (abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_type == accounter::skeleton::argument_type::is_integer_literal) {
-                        // constant is a integer literal, write code
-                        write_instructions::write__write_cell(workspace, abstraction.p_literals.p_literals[abstraction.lookup_literal_by_ID(statement_ID, 0, error_occured).p_ID].p_integer_value, calculate_variable_index(abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0]));
+                        // constant is an integer literal, write code
+                        write_instructions::write__write_cell(workspace, abstraction.p_literals.p_literals[abstraction.lookup_literal_by_ID(statement_ID, 0, error_occured).p_ID].p_integer_value, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                    } else if (abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_type == accounter::skeleton::argument_type::is_offset) {
+                        // if pass is measure
+                        if (workspace.p_pass_type == pass_type::pass_measure) {
+                            // write dummy instruction
+                            write_instructions::write__write_cell(workspace, 0, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                        // if pass is build
+                        } else {
+                            // DEBUG
+                            std::cout << "Offset ID #" << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID << std::endl;
+
+                            // constant is an offset, write code
+                            write_instructions::write__write_cell(workspace, workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets[abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID].p_instruction_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                        }
                     }
 
                     break;
                 // pirate.copy(1)(1)
                 case runner::instruction_type::copy_cell:
                     // write code
-                    write_instructions::write__copy_cell(workspace, calculate_variable_index(abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0]), calculate_variable_index(abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0]));
+                    write_instructions::write__copy_cell(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
 
                     break;
                 // pirate.print_cell_as_number(1)(0)
                 case runner::instruction_type::print_cell_as_number:
                     // write code
-                    write_instructions::write__print_cell_as_number(workspace, calculate_variable_index(abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0]));
+                    write_instructions::write__print_cell_as_number(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
 
                     break;
                 // pirate.print_cell_as_character(1)(0)
                 case runner::instruction_type::print_cell_as_character:
                     // write code
-                    write_instructions::write__print_cell_as_character(workspace, calculate_variable_index(abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0]));
+                    write_instructions::write__print_cell_as_character(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
+
+                    break;
+                // pirate.jump_to(1)(0)
+                case runner::instruction_type::jump_to:
+                    // write code
+                    write_instructions::write__jump_to(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
 
                     break;
                 // user defined statement call
@@ -270,28 +290,17 @@ namespace generator {
 
                     break;
                 }
-
-                // next call index
-                call_index++;
             } else if (abstraction.p_statement_map[statement_ID].p_type == accounter::skeleton::statement_type::is_offset_statement) {
                 // define offset
                 if (workspace.p_pass_type == pass_type::pass_measure) {
-                    workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets.push_back(workspace.get_offset());
+                    // DEBUG
+                    std::cout << "Defined abstraction offset #" << abstraction.p_statement_map[statement_ID].p_ID << " at instruction #" << workspace.get_offset() << std::endl;
+
+                    // write offset
+                    workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets[abstraction.p_statement_map[statement_ID].p_ID].p_instruction_ID = workspace.get_offset();
                 }
             }
         }
-
-        // generate function epilogue
-        // create function return offset
-        if (workspace.p_pass_type == pass_type::pass_measure) {
-            workspace.p_abstraction_offsets[abstraction_ID].p_end = workspace.get_offset();
-        }
-
-        /*// pass outputs
-        for (uint64_t output_ID = 0; output_ID < abstraction.p_variables.p_outputs.size(); output_ID++) {
-            // pass output
-            runner::append__pass_output(workspace, abstraction.p_variables.p_inputs.size() + output_ID);
-        }*/
 
         // delete context
         write_instructions::write__restore_old_context(workspace);

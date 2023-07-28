@@ -15,6 +15,8 @@ sail()() = {
     pirate.copy(var.d)(var.e)
     pirate.print_cell_as_number(var.e)()
 
+    pirate.write_cell(@test.offset.2)(var.f)
+
     pirate.print_cell_as_character(new_line)()
 
     @test.offset.2
