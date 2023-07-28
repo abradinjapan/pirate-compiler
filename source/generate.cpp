@@ -277,6 +277,78 @@ namespace generator {
                     write_instructions::write__print_cell_as_character(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
 
                     break;
+                // pirate.create_new_context(1)(0)
+                case runner::instruction_type::create_new_context:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although create_new_context is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.restore_old_context(0)(0)
+                case runner::instruction_type::restore_old_context:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although restore_old_context is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.clear_inputs(0)(0)
+                case runner::instruction_type::clear_inputs:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although clear_inputs is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.clear_outputs(0)(0)
+                case runner::instruction_type::clear_outputs:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although clear_outputs is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.pass_input(1)(0)
+                case runner::instruction_type::pass_input:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although pass_input is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.get_input(0)(1)
+                case runner::instruction_type::get_input:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although get_input is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.pass_output(1)(0)
+                case runner::instruction_type::pass_output:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although pass_output is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.get_output(0)(1)
+                case runner::instruction_type::get_output:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although get_output is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
                 // pirate.jump_to(1)(0)
                 case runner::instruction_type::jump_to:
                     // write code

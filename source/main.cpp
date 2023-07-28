@@ -115,6 +115,9 @@ void compile_and_run(std::string user_code) {
 
     // run if no errors occured
     if (compilation_error == false) {
+        // inform user of program start
+        std::cout << "Starting program..." << std::endl;
+
         // run code
         runner::run_program(program, run_time_error);
     } else {
@@ -131,7 +134,8 @@ int main() {
     //compile(load_file("programs/test3.pirate"));
     //compile(load_file("programs/test4.pirate"));
     compile_and_run(load_file("programs/test5.pirate"));
-    compile_and_run(load_file("programs/test6.pirate"));
+    //compile_and_run(load_file("programs/test6.pirate"));
+    compile_and_run(load_file("programs/test7.pirate"));
 
     // test runner
     //test_runner();
