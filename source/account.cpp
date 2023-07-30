@@ -676,6 +676,8 @@ namespace accounter {
                 synthesize_header_only_abstraction("pirate.pass_output", 1, 0);
                 synthesize_header_only_abstraction("pirate.get_output", 0, 1);
                 synthesize_header_only_abstraction("pirate.jump_to", 1, 0);
+                synthesize_header_only_abstraction("pirate.get_instruction_index", 0, 1);
+                synthesize_header_only_abstraction("pirate.integer_add", 2, 1);
             }
 
             // lookup header in header table

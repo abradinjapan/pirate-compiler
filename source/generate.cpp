@@ -202,6 +202,42 @@ namespace generator {
             // next instruction
             workspace.p_instruction_count++;
         }
+
+        void write__get_instruction_index(workspace& workspace, runner::cell_ID destination) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::get_instruction_index;
+                temp_instruction.p_output_0 = destination;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__integer_add(workspace& workspace, runner::cell_ID source_1, runner::cell_ID source_2, runner::cell_ID destination) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::integer_add;
+                temp_instruction.p_input_0 = source_1;
+                temp_instruction.p_input_1 = source_2;
+                temp_instruction.p_output_0 = destination;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
     }
 
     void generate_abstraction(workspace& workspace, accounter::skeleton::abstraction& abstraction, uint64_t abstraction_ID, bool& error_occured) {
@@ -229,7 +265,7 @@ namespace generator {
         for (uint64_t statement_ID = 0; statement_ID < abstraction.p_statement_map.size(); statement_ID++) {
             // generate statement
             if (abstraction.p_statement_map[statement_ID].p_type == accounter::skeleton::statement_type::is_call_statement) {
-                // write code (NOTE: make sure that the cases are aligned with their respective run.cpp instructions!)
+                // write code (NOTE: make sure that the switch cases are aligned with their respective run.cpp instructions!)
                 switch (abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_header_ID) {
                 // pirate.quit(0)(0)
                 case runner::instruction_type::quit:
@@ -353,6 +389,18 @@ namespace generator {
                 case runner::instruction_type::jump_to:
                     // write code
                     write_instructions::write__jump_to(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
+
+                    break;
+                // pirate.get_instruction_index(0)(1)
+                case runner::instruction_type::get_instruction_index:
+                    // write code
+                    write_instructions::write__get_instruction_index(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+
+                    break;
+                // pirate.integer_add(2)(1)
+                case runner::instruction_type::integer_add:
+                    // write code
+                    write_instructions::write__integer_add(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[1].p_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
 
                     break;
                 // user defined statement call

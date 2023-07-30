@@ -48,6 +48,8 @@ namespace runner {
         pass_output,
         get_output,
         jump_to,
+        get_instruction_index,
+        integer_add,
     };
 
     class instruction {
@@ -55,12 +57,14 @@ namespace runner {
         instruction_type p_type;
         cell p_write_register_value;
         cell_ID p_input_0;
+        cell_ID p_input_1;
         cell_ID p_output_0;
 
         instruction() {
             p_type = instruction_type::quit;
             p_write_register_value = 0;
             p_input_0 = 0;
+            p_input_1 = 0;
             p_output_0 = 0;
         }
     };
@@ -194,6 +198,22 @@ namespace runner {
             case instruction_type::jump_to:
                 // jump
                 current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
+
+                break;
+            case instruction_type::get_instruction_index:
+                // perform addition
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = (cell)current_instruction;
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::integer_add:
+                // perform addition
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0] + context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1];
+
+                // next instruction
+                current_instruction++;
 
                 break;
             default:
