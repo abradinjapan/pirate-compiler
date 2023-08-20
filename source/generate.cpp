@@ -191,6 +191,39 @@ namespace generator {
             workspace.p_instruction_count++;
         }
 
+        void write__jump_to_function(workspace& workspace, runner::cell_ID destination_instruction) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set data
+                temp_instruction.p_type = runner::instruction_type::jump_to_function;
+                temp_instruction.p_input_0 = destination_instruction;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__jump_from_function(workspace& workspace) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set data
+                temp_instruction.p_type = runner::instruction_type::jump_from_function;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
         void write__jump_to(workspace& workspace, runner::cell_ID source) {
             runner::instruction temp_instruction;
 

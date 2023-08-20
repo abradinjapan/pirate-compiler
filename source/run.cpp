@@ -47,6 +47,8 @@ namespace runner {
         get_input,
         pass_output,
         get_output,
+        jump_to_function,
+        jump_from_function,
         jump_to,
         get_instruction_index,
         integer_add,
@@ -80,6 +82,7 @@ namespace runner {
         bool running = true;
         int current_instruction = 0;
         std::vector<context> context_stack;
+        std::vector<int> return_stack;
         buffer inputs;
         buffer outputs;
 
@@ -193,6 +196,20 @@ namespace runner {
 
                 // next instruction
                 current_instruction++;
+
+                break;
+            case instruction_type::jump_to_function:
+                // push the instruction to be returned
+                return_stack.push_back(current_instruction + 1);
+
+                // jump
+                current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
+
+                break;
+            case instruction_type::jump_from_function:
+                // jump
+                current_instruction = return_stack[return_stack.size() - 1];
+                return_stack.pop_back();
 
                 break;
             case instruction_type::jump_to:

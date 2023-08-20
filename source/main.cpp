@@ -86,11 +86,20 @@ runner::program compile(std::string user_code, bool& compilation_error) {
 }
 
 void test_runner_gen_program (generator::workspace& workspace) {
-    generator::write_instructions::write__create_new_context(workspace, 5);
-    generator::write_instructions::write__write_cell(workspace, 10, 0);
-    generator::write_instructions::write__print_cell_as_character(workspace, 0);
+    generator::write_instructions::write__create_new_context(workspace, 1);
+    generator::write_instructions::write__write_cell(workspace, (runner::cell)5, 0);
+    generator::write_instructions::write__jump_to_function(workspace, 0);
     generator::write_instructions::write__restore_old_context(workspace);
     generator::write_instructions::write__quit(workspace);
+    
+    generator::write_instructions::write__create_new_context(workspace, 5);
+    generator::write_instructions::write__write_cell(workspace, 97, 0);
+    generator::write_instructions::write__print_cell_as_character(workspace, 0);
+    generator::write_instructions::write__print_cell_as_character(workspace, 0);
+    generator::write_instructions::write__print_cell_as_character(workspace, 0);
+    generator::write_instructions::write__print_cell_as_character(workspace, 0);
+    generator::write_instructions::write__restore_old_context(workspace);
+    generator::write_instructions::write__jump_from_function(workspace);
 }
 
 void test_runner() {
