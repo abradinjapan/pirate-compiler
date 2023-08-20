@@ -85,25 +85,39 @@ runner::program compile(std::string user_code, bool& compilation_error) {
     return output;
 }
 
-/*void test_runner() {
-    runner::program program;
+void test_runner_gen_program (generator::workspace& workspace) {
+    generator::write_instructions::write__create_new_context(workspace, 5);
+    generator::write_instructions::write__write_cell(workspace, 10, 0);
+    generator::write_instructions::write__print_cell_as_character(workspace, 0);
+    generator::write_instructions::write__restore_old_context(workspace);
+    generator::write_instructions::write__quit(workspace);
+}
+
+void test_runner() {
+    generator::workspace workspace;
     bool error_occured = false;
 
+    // start first pass
+    workspace.start_pass_measure(1);
+
+    // measure program
+    test_runner_gen_program(workspace);
+
+    // finish first pass
+    workspace.finish_pass_measure();
+
+    // start second pass
+    workspace.start_pass_build();
+
     // build program
-    runner::append__create_new_context(program, 4);
-    runner::append__write_cell(program, 1002, 0);
-    runner::append__write_cell(program, '\n', 1);
-    runner::append__write_cell(program, 1004, 0);
-    runner::append__print_cell_as_number(program, 0);
-    runner::append__print_cell_as_character(program, 1);
-    runner::append__print_cell_as_number(program, 0);
-    runner::append__print_cell_as_character(program, 1);
-    runner::append__restore_old_context(program);
-    runner::append__quit(program);
+    test_runner_gen_program(workspace);
+
+    // finish second pass
+    workspace.finish_pass_build();
 
     // run program
-    runner::run_program(program, error_occured);
-}*/
+    runner::run_program(workspace.p_program, error_occured);
+}
 
 void compile_and_run(std::string user_code) {
     runner::program program;
@@ -135,10 +149,10 @@ int main() {
     //compile(load_file("programs/test4.pirate"));
     compile_and_run(load_file("programs/test5.pirate"));
     //compile_and_run(load_file("programs/test6.pirate"));
-    compile_and_run(load_file("programs/test7.pirate"));
+    //compile_and_run(load_file("programs/test7.pirate"));
 
     // test runner
-    //test_runner();
+    test_runner();
 
     return 0;
 }

@@ -61,6 +61,11 @@ namespace generator {
             p_pass_type = pass_type::pass_build;
         }
 
+        void finish_pass_build() {
+            // DEBUG
+            std::cout << "Finishing pass build." << std::endl;
+        }
+
         uint64_t get_offset() {
             return p_instruction_count;
         }
@@ -240,11 +245,40 @@ namespace generator {
         }
     }
 
+    enum variable_type {
+        variable_return_instruction,
+        variable_return_instruction_temps,
+        variable_input,
+        variable_output,
+        variable_variable,
+        variable_COUNT,
+    };
+
+    #define return_instruction_temp_count 2
+
+    uint64_t calculate_variable_index(variable_type type, accounter::skeleton::abstraction& abstraction, uint64_t index) {
+        switch (type) {
+        case variable_type::variable_return_instruction:
+            return 0;
+        case variable_type::variable_return_instruction_temps:
+            return 1 + index;
+        case variable_type::variable_input:
+            return 1 + return_instruction_temp_count + index;
+        case variable_type::variable_output:
+            return 1 + return_instruction_temp_count + abstraction.p_variables.p_inputs.size() + index;
+        case variable_type::variable_variable:
+            return 1 + return_instruction_temp_count + abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + index;
+        case variable_type::variable_COUNT:
+        default:
+            return 1 + return_instruction_temp_count + abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + abstraction.p_variables.p_variables.size();
+        }
+    }
+
     void generate_abstraction(workspace& workspace, accounter::skeleton::abstraction& abstraction, uint64_t abstraction_ID, bool& error_occured) {
         uint64_t variable_count;
 
         // determine variable count
-        variable_count = abstraction.p_variables.p_variables.size();
+        variable_count = calculate_variable_index(variable_type::variable_COUNT, abstraction, 0);
 
         // setup offsets container
         if (workspace.p_pass_type == pass_type::pass_measure) {
@@ -258,6 +292,11 @@ namespace generator {
         }
 
         // generate function prologue
+        // get inputs
+        for (uint64_t input_ID = 0; input_ID < abstraction.p_variables.p_inputs.size(); input_ID++) {
+            // TODO
+        }
+
         // create context
         write_instructions::write__create_new_context(workspace, variable_count);
 
@@ -278,19 +317,19 @@ namespace generator {
                     // determine type of input
                     if (abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_type == accounter::skeleton::argument_type::is_integer_literal) {
                         // constant is an integer literal, write code
-                        write_instructions::write__write_cell(workspace, abstraction.p_literals.p_literals[abstraction.lookup_literal_by_ID(statement_ID, 0, error_occured).p_ID].p_integer_value, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                        write_instructions::write__write_cell(workspace, abstraction.p_literals.p_literals[abstraction.lookup_literal_by_ID(statement_ID, 0, error_occured).p_ID].p_integer_value, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID));
                     } else if (abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_type == accounter::skeleton::argument_type::is_offset) {
                         // if pass is measure
                         if (workspace.p_pass_type == pass_type::pass_measure) {
                             // write dummy instruction
-                            write_instructions::write__write_cell(workspace, 0, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                            write_instructions::write__write_cell(workspace, 0, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID));
                         // if pass is build
                         } else {
                             // DEBUG
                             std::cout << "Offset ID #" << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID << std::endl;
 
                             // constant is an offset, write code
-                            write_instructions::write__write_cell(workspace, workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets[abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID].p_instruction_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                            write_instructions::write__write_cell(workspace, workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets[abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID].p_instruction_ID, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID));
                         }
                     }
 
@@ -298,19 +337,19 @@ namespace generator {
                 // pirate.copy(1)(1)
                 case runner::instruction_type::copy_cell:
                     // write code
-                    write_instructions::write__copy_cell(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                    write_instructions::write__copy_cell(workspace, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID), calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID));
 
                     break;
                 // pirate.print_cell_as_number(1)(0)
                 case runner::instruction_type::print_cell_as_number:
                     // write code
-                    write_instructions::write__print_cell_as_number(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
+                    write_instructions::write__print_cell_as_number(workspace, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID));
 
                     break;
                 // pirate.print_cell_as_character(1)(0)
                 case runner::instruction_type::print_cell_as_character:
                     // write code
-                    write_instructions::write__print_cell_as_character(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
+                    write_instructions::write__print_cell_as_character(workspace, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID));
 
                     break;
                 // pirate.create_new_context(1)(0)
@@ -388,25 +427,30 @@ namespace generator {
                 // pirate.jump_to(1)(0)
                 case runner::instruction_type::jump_to:
                     // write code
-                    write_instructions::write__jump_to(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID);
+                    write_instructions::write__jump_to(workspace, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID));
 
                     break;
                 // pirate.get_instruction_index(0)(1)
                 case runner::instruction_type::get_instruction_index:
                     // write code
-                    write_instructions::write__get_instruction_index(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                    write_instructions::write__get_instruction_index(workspace, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID));
 
                     break;
                 // pirate.integer_add(2)(1)
                 case runner::instruction_type::integer_add:
                     // write code
-                    write_instructions::write__integer_add(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[1].p_ID, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID);
+                    write_instructions::write__integer_add(workspace, calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID), calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[1].p_ID), calculate_variable_index(variable_type::variable_variable, abstraction, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0].p_ID));
 
                     break;
                 // user defined statement call
                 default:
                     // DEBUG
                     std::cout << "Temporary Error: Generation error, user code defined calls are not implemented: [ " << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_header_ID << " ] statement_ID: " << statement_ID << std::endl;
+
+                    // perform jump
+                    /*write_instructions::write__write_cell(workspace, 3, calculate_variable_index(variable_type::variable_return_instruction_temps, abstraction, 0));
+                    write_instructions::write__get_instruction_index(workspace, calculate_variable_index(variable_type::variable_return_instruction_temps, abstraction, 1));
+                    write_instructions::write__integer_add(workspace, )*/
 
                     break;
                 }

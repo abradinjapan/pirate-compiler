@@ -578,6 +578,7 @@ namespace accounter {
                         return;
                     }
 
+                    // get abstraction body
                     if (p_abstractions[p_abstractions.size() - 1].p_has_scope == true) {
                         // get offset table
                         p_abstractions[p_abstractions.size() - 1].p_offsets = get_offset_table(program.p_abstractions[i], error_occured);
@@ -642,8 +643,9 @@ namespace accounter {
                 // create header
                 p_header_table.try_register_header(header(name, input_count, output_count));
 
-                // create fake body
+                // setup body
                 p_abstractions.push_back(abstraction());
+                p_abstractions[p_abstractions.size() - 1].p_has_scope = false;
 
                 // setup inputs
                 for (int64_t i = 0; i < input_count; i++) {
@@ -654,9 +656,6 @@ namespace accounter {
                 for (int64_t i = 0; i < output_count; i++) {
                     p_abstractions[p_abstractions.size() - 1].p_variables.p_outputs.push_back(variable(std::to_string(i), -1));
                 }
-
-                // setup body
-                p_abstractions[p_abstractions.size() - 1].p_has_scope = false;
             }
 
             // add predefined abstractions to tables
@@ -823,6 +822,7 @@ namespace accounter {
                     }
                 }
 
+                // success
                 return output;
             }
 
