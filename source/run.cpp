@@ -47,8 +47,8 @@ namespace runner {
         get_input,
         pass_output,
         get_output,
-        jump_to_function,
-        jump_from_function,
+        jump_to_abstraction,
+        jump_from_abstraction,
         jump_to,
         get_instruction_index,
         integer_add,
@@ -198,7 +198,7 @@ namespace runner {
                 current_instruction++;
 
                 break;
-            case instruction_type::jump_to_function:
+            case instruction_type::jump_to_abstraction:
                 // push the instruction to be returned
                 return_stack.push_back(current_instruction + 1);
 
@@ -206,7 +206,7 @@ namespace runner {
                 current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
 
                 break;
-            case instruction_type::jump_from_function:
+            case instruction_type::jump_from_abstraction:
                 // jump
                 current_instruction = return_stack[return_stack.size() - 1];
                 return_stack.pop_back();

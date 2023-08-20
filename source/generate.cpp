@@ -191,13 +191,113 @@ namespace generator {
             workspace.p_instruction_count++;
         }
 
-        void write__jump_to_function(workspace& workspace, runner::cell_ID destination_instruction) {
+        void write__clear_inputs(workspace& workspace) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::clear_inputs;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__clear_outputs(workspace& workspace) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::clear_outputs;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__pass_input(workspace& workspace, runner::cell_ID parameter) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::pass_input;
+                temp_instruction.p_input_0 = parameter;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__get_input(workspace& workspace, runner::cell_ID parameter) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::get_input;
+                temp_instruction.p_output_0 = parameter;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__pass_output(workspace& workspace, runner::cell_ID parameter) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::pass_output;
+                temp_instruction.p_input_0 = parameter;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__get_output(workspace& workspace, runner::cell_ID parameter) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::get_output;
+                temp_instruction.p_output_0 = parameter;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__jump_to_abstraction(workspace& workspace, runner::cell_ID destination_instruction) {
             runner::instruction temp_instruction;
 
             // create instruction
             if (workspace.p_pass_type == pass_type::pass_build) {
                 // set data
-                temp_instruction.p_type = runner::instruction_type::jump_to_function;
+                temp_instruction.p_type = runner::instruction_type::jump_to_abstraction;
                 temp_instruction.p_input_0 = destination_instruction;
 
                 // write instruction
@@ -208,13 +308,13 @@ namespace generator {
             workspace.p_instruction_count++;
         }
 
-        void write__jump_from_function(workspace& workspace) {
+        void write__jump_from_abstraction(workspace& workspace) {
             runner::instruction temp_instruction;
 
             // create instruction
             if (workspace.p_pass_type == pass_type::pass_build) {
                 // set data
-                temp_instruction.p_type = runner::instruction_type::jump_from_function;
+                temp_instruction.p_type = runner::instruction_type::jump_from_abstraction;
 
                 // write instruction
                 workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
@@ -279,31 +379,23 @@ namespace generator {
     }
 
     enum variable_type {
-        variable_return_instruction,
-        variable_return_instruction_temps,
         variable_input,
         variable_output,
         variable_variable,
         variable_COUNT,
     };
 
-    #define return_instruction_temp_count 2
-
     uint64_t calculate_variable_index(variable_type type, accounter::skeleton::abstraction& abstraction, uint64_t index) {
         switch (type) {
-        case variable_type::variable_return_instruction:
-            return 0;
-        case variable_type::variable_return_instruction_temps:
-            return 1 + index;
         case variable_type::variable_input:
-            return 1 + return_instruction_temp_count + index;
+            return index;
         case variable_type::variable_output:
-            return 1 + return_instruction_temp_count + abstraction.p_variables.p_inputs.size() + index;
+            return abstraction.p_variables.p_inputs.size() + index;
         case variable_type::variable_variable:
-            return 1 + return_instruction_temp_count + abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + index;
+            return abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + index;
         case variable_type::variable_COUNT:
         default:
-            return 1 + return_instruction_temp_count + abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + abstraction.p_variables.p_variables.size();
+            return abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + abstraction.p_variables.p_variables.size();
         }
     }
 
@@ -455,6 +547,24 @@ namespace generator {
 
                     // print error
                     std::cout << "Generation Error: Although get_output is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.jump_to_abstraction(1)(0)
+                case runner::instruction_type::jump_to_abstraction:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although jump_to_abstraction is a valid instruction, it is not available for general use." << std::endl;
+
+                    break;
+                // pirate.jump_from_abstraction(0)(0)
+                case runner::instruction_type::jump_from_abstraction:
+                    // set error
+                    error_occured = true;
+
+                    // print error
+                    std::cout << "Generation Error: Although jump_from_abstraction is a valid instruction, it is not available for general use." << std::endl;
 
                     break;
                 // pirate.jump_to(1)(0)
