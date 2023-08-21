@@ -393,12 +393,15 @@ namespace generator {
             return abstraction.p_variables.p_inputs.size() + argument.p_ID;
         case accounter::skeleton::argument_type::is_variable:
             return abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + argument.p_ID;
-        default:
+        // offset is used for storing the temporary instruction number for function calls
+        case accounter::skeleton::argument_type::is_offset:
             return abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + abstraction.p_variables.p_variables.size();
+        default:
+            return abstraction.p_variables.p_inputs.size() + abstraction.p_variables.p_outputs.size() + abstraction.p_variables.p_variables.size() + 1;
         }
     }
 
-    void generate_abstraction(workspace& workspace, accounter::skeleton::abstraction& abstraction, uint64_t abstraction_ID, bool& error_occured) {
+    void generate_abstraction(workspace& workspace, accounter::skeleton::skeleton& skeleton, accounter::skeleton::abstraction& abstraction, uint64_t abstraction_ID, bool& error_occured) {
         uint64_t variable_count;
 
         // determine variable count
@@ -588,13 +591,21 @@ namespace generator {
                 // user defined statement call
                 default:
                     // DEBUG
-                    //std::cout << "Temporary Error: Generation error, user code defined calls are not implemented: [ " << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_header_ID << " ] statement_ID: " << statement_ID << std::endl;
+                    std::cout << "Temporary Error: Generation error, user code defined calls are not implemented: [ " << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_header_ID << " ] statement_ID: " << statement_ID << std::endl;
 
-                    // pass outputs
+                    // pass inputs
+                    for (uint64_t input_ID = 0; input_ID < abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs.size(); input_ID++) {
+                        write_instructions::write__pass_input(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[input_ID].p_ID);
+                    }
 
                     // perform call
+                    write_instructions::write__write_cell(workspace, workspace.p_abstraction_offsets[abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_header_ID].p_start.p_instruction_ID, calculate_variable_index(accounter::skeleton::argument(accounter::skeleton::argument_type::is_offset, 0), abstraction));
+                    write_instructions::write__jump_to_abstraction(workspace, calculate_variable_index(accounter::skeleton::argument(accounter::skeleton::argument_type::is_offset, 0), abstraction));
 
                     // get outputs
+                    for (uint64_t output_ID = abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs.size(); output_ID > 0; output_ID--) {
+                        write_instructions::write__get_output(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[output_ID - 1].p_ID);
+                    }
 
                     break;
                 }
@@ -619,6 +630,9 @@ namespace generator {
 
         // delete context
         write_instructions::write__restore_old_context(workspace);
+
+        // return to caller
+        write_instructions::write__jump_from_abstraction(workspace);
     }
 
     // generate code from a program
@@ -633,7 +647,7 @@ namespace generator {
             // check if abstraction has scope
             if (skeleton.p_abstractions[abstraction_ID].p_has_scope) {
                 // turn into function
-                generate_abstraction(workspace, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
+                generate_abstraction(workspace, skeleton, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
 
                 // check error
                 if (error_occured) {
@@ -653,7 +667,7 @@ namespace generator {
             // check if abstraction has scope
             if (skeleton.p_abstractions[abstraction_ID].p_has_scope) {
                 // turn into function
-                generate_abstraction(workspace, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
+                generate_abstraction(workspace, skeleton, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
 
                 // check error
                 if (error_occured) {
