@@ -590,9 +590,6 @@ namespace generator {
                     break;
                 // user defined statement call
                 default:
-                    // DEBUG
-                    std::cout << "Temporary Error: Generation error, user code defined calls are not implemented: [ " << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_header_ID << " ] statement_ID: " << statement_ID << std::endl;
-
                     // pass inputs
                     for (uint64_t input_ID = 0; input_ID < abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs.size(); input_ID++) {
                         write_instructions::write__pass_input(workspace, abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[input_ID].p_ID);
@@ -635,12 +632,29 @@ namespace generator {
         write_instructions::write__jump_from_abstraction(workspace);
     }
 
+    void generate_kickstarter(workspace& workspace, uint64_t start_function_ID) {
+        write_instructions::write__create_new_context(workspace, 1);
+        write_instructions::write__write_cell(workspace, workspace.p_abstraction_offsets[start_function_ID].p_start.p_instruction_ID, 0);
+        write_instructions::write__jump_to_abstraction(workspace, 0);
+        write_instructions::write__write_cell(workspace, 123456, 0);
+        write_instructions::write__print_cell_as_number(workspace, 0);
+        write_instructions::write__quit(workspace);
+    }
+
     // generate code from a program
     runner::program generate_program(accounter::skeleton::skeleton& skeleton, bool& error_occured) {
         workspace workspace;
 
         // start pass
         workspace.start_pass_measure(skeleton.p_abstractions.size());
+
+        // generate kickstarter
+        generate_kickstarter(workspace, skeleton.lookup_header_by_name("sail", error_occured));
+
+        // check error
+        if (error_occured) {
+            return workspace.p_program;
+        }
 
         // measure each abstraction
         for (uint64_t abstraction_ID = 0; abstraction_ID < skeleton.p_abstractions.size(); abstraction_ID++) {
@@ -661,6 +675,14 @@ namespace generator {
 
         // start pass
         workspace.start_pass_build();
+
+        // generate kickstarter
+        generate_kickstarter(workspace, skeleton.lookup_header_by_name("sail", error_occured));
+
+        // check error
+        if (error_occured) {
+            return workspace.p_program;
+        }
 
         // measure each abstraction
         for (uint64_t abstraction_ID = 0; abstraction_ID < skeleton.p_abstractions.size(); abstraction_ID++) {

@@ -681,6 +681,7 @@ namespace accounter {
                 synthesize_header_only_abstraction("pirate.integer_add", 2, 1);
             }
 
+        public:
             // lookup header in header table
             int lookup_header_by_name(std::string header_name, bool& error_occured) {
                 // lookup header
@@ -700,7 +701,7 @@ namespace accounter {
                 // return invalid argument
                 return -1;
             }
-
+        private:
             // get statement table
             std::vector<call> get_call_table(parser::abstraction& abstraction, int abstraction_ID, bool& error_occured) {
                 std::vector<call> output;
