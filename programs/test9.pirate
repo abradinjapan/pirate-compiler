@@ -1,0 +1,8 @@
+pi()(output) = {
+    pirate.write_cell(pirate.integer.314)(output)
+}
+
+pirate.sail()() = {
+    pi()(pi)
+    pirate.print_cell_as_number(pi)()
+}

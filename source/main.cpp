@@ -168,10 +168,9 @@ int main() {
     std::cout << "☠️ This here infernal contraption be a compiler! ARRGH!☠️ " << std::endl;
 
     // compile
-    compile_and_run(load_file("programs/test4.pirate"));
-    compile_and_run(load_file("programs/test5.pirate"));
     compile_and_run(load_file("programs/test7.pirate"));
     compile_and_run(load_file("programs/test8.pirate"));
+    compile_and_run(load_file("programs/test9.pirate"));
 
     // test runner
     //test_runner();

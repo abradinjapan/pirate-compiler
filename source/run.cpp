@@ -34,6 +34,7 @@ namespace runner {
     };
 
     enum instruction_type {
+        // generic
         quit,
         write_cell,
         copy_cell,
@@ -49,6 +50,8 @@ namespace runner {
         jump_from_abstraction,
         jump_to,
         get_instruction_index,
+
+        // calculations
         integer_add,
     };
 
