@@ -1,4 +1,4 @@
-sail()() = {
+pirate.sail()() = {
     pirate.write_cell(pirate.integer.10)(new_line)
     pirate.print_cell_as_character(new_line)()
     pirate.print_cell_as_character(new_line)()

@@ -41,8 +41,6 @@ namespace runner {
         print_cell_as_character,
         create_new_context,
         restore_old_context,
-        clear_inputs,
-        clear_outputs,
         pass_input,
         get_input,
         pass_output,
@@ -143,22 +141,6 @@ namespace runner {
                 // next instruction
                 current_instruction++;
 
-                break;
-            case instruction_type::clear_inputs:
-                // clear inputs
-                inputs.p_cells.clear();
-
-                // next instruction
-                current_instruction++;
-
-                break;
-            case instruction_type::clear_outputs:
-                // clear inputs
-                outputs.p_cells.clear();
-
-                // next instruction
-                current_instruction++;
-                
                 break;
             case instruction_type::pass_input:
                 // add input

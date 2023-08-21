@@ -1,4 +1,4 @@
-sail()() = {
+pirate.sail()() = {
     @test.offset.1
     pirate.write_cell(pirate.integer.100)(var.a)
     pirate.write_cell(pirate.integer.200)(var.b)

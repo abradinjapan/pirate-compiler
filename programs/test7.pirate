@@ -1,4 +1,4 @@
-sail()() = {
+pirate.sail()() = {
     pirate.write_cell(pirate.integer.20)(z)
     function(z)(y)
     pirate.print_cell_as_number(y)()

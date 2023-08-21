@@ -1,4 +1,4 @@
-sail()() = {
+pirate.sail()() = {
     @function.start
 
     pirate.write_cell(pirate.integer.100)(a)

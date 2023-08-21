@@ -1,4 +1,4 @@
-sail()() = {
+pirate.sail()() = {
     pirate.write_cell(pirate.integer.100)(var.a)
     pirate.write_cell(pirate.integer.200)(var.b)
     pirate.write_cell(pirate.integer.300)(var.c)

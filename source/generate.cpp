@@ -191,38 +191,6 @@ namespace generator {
             workspace.p_instruction_count++;
         }
 
-        void write__clear_inputs(workspace& workspace) {
-            runner::instruction temp_instruction;
-
-            // create instruction
-            if (workspace.p_pass_type == pass_type::pass_build) {
-                // set type
-                temp_instruction.p_type = runner::instruction_type::clear_inputs;
-
-                // write instruction
-                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
-            }
-
-            // next instruction
-            workspace.p_instruction_count++;
-        }
-
-        void write__clear_outputs(workspace& workspace) {
-            runner::instruction temp_instruction;
-
-            // create instruction
-            if (workspace.p_pass_type == pass_type::pass_build) {
-                // set type
-                temp_instruction.p_type = runner::instruction_type::clear_outputs;
-
-                // write instruction
-                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
-            }
-
-            // next instruction
-            workspace.p_instruction_count++;
-        }
-
         void write__pass_input(workspace& workspace, runner::cell_ID parameter) {
             runner::instruction temp_instruction;
 
@@ -498,24 +466,6 @@ namespace generator {
                     std::cout << "Generation Error: Although restore_old_context is a valid instruction, it is not available for general use." << std::endl;
 
                     break;
-                // pirate.clear_inputs(0)(0)
-                case runner::instruction_type::clear_inputs:
-                    // set error
-                    error_occured = true;
-
-                    // print error
-                    std::cout << "Generation Error: Although clear_inputs is a valid instruction, it is not available for general use." << std::endl;
-
-                    break;
-                // pirate.clear_outputs(0)(0)
-                case runner::instruction_type::clear_outputs:
-                    // set error
-                    error_occured = true;
-
-                    // print error
-                    std::cout << "Generation Error: Although clear_outputs is a valid instruction, it is not available for general use." << std::endl;
-
-                    break;
                 // pirate.pass_input(1)(0)
                 case runner::instruction_type::pass_input:
                     // set error
@@ -647,7 +597,7 @@ namespace generator {
         workspace.start_pass_measure(skeleton.p_abstractions.size());
 
         // generate kickstarter
-        generate_kickstarter(workspace, skeleton.lookup_header_by_name("sail", error_occured));
+        generate_kickstarter(workspace, skeleton.lookup_header_by_name("pirate.sail", error_occured));
 
         // check error
         if (error_occured) {
@@ -675,7 +625,7 @@ namespace generator {
         workspace.start_pass_build();
 
         // generate kickstarter
-        generate_kickstarter(workspace, skeleton.lookup_header_by_name("sail", error_occured));
+        generate_kickstarter(workspace, skeleton.lookup_header_by_name("pirate.sail", error_occured));
 
         // check error
         if (error_occured) {
