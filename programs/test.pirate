@@ -4,6 +4,4 @@ sail()() = {
     pirate.write_cell(pirate.integer.100)(a)
 
     pirate.print_cell_as_number(a)()
-
-    pirate.quit(@function.end)()
 }

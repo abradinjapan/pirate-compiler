@@ -22,6 +22,4 @@ sail()() = {
     pirate.print_cell_as_character(new_line)()
 
     @test.offset.2
-
-    pirate.quit()()
 }

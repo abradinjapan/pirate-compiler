@@ -10,6 +10,10 @@ sail()() = {
 
     pirate.copy(var.a)(var.b)
     pirate.copy(var.d)(var.e)
+
+    function(var.a var.b var.c)(var.z)
+
+    pirate.print_cell_as_number(var.z)()
 }
 
 function(a b c)(d) = {

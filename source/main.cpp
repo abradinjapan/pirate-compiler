@@ -72,15 +72,15 @@ runner::program compile(std::string user_code, bool& compilation_error) {
     // generate program code
     output = generator::generate_program(skeleton, generation_error);
 
-    // print code
-    print_program(output);
-    
     // do not proceed if error occured
     if (generation_error) {
         compilation_error = true;
         
         return output;
     }
+
+    // print code
+    print_program(output);
 
     return output;
 }
@@ -168,16 +168,13 @@ int main() {
     std::cout << "☠️ This here infernal contraption be a compiler! ARRGH!☠️ " << std::endl;
 
     // compile
-    //compile(load_file("programs/test.pirate"));
-    //compile(load_file("programs/test2.pirate"));
-    //compile(load_file("programs/test3.pirate"));
-    //compile(load_file("programs/test4.pirate"));
+    compile_and_run(load_file("programs/test4.pirate"));
     compile_and_run(load_file("programs/test5.pirate"));
-    //compile_and_run(load_file("programs/test6.pirate"));
     compile_and_run(load_file("programs/test7.pirate"));
+    compile_and_run(load_file("programs/test8.pirate"));
 
     // test runner
-    test_runner();
+    //test_runner();
 
     return 0;
 }

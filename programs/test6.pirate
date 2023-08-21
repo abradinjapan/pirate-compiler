@@ -10,6 +10,4 @@ sail()() = {
     pirate.print_cell_as_character(new_line)()
 
     pirate.jump_to(offset)()
-
-    pirate.quit()()
 }

@@ -401,7 +401,7 @@ namespace generator {
         }
     }
 
-    void generate_abstraction(workspace& workspace, accounter::skeleton::skeleton& skeleton, accounter::skeleton::abstraction& abstraction, uint64_t abstraction_ID, bool& error_occured) {
+    void generate_abstraction(workspace& workspace, accounter::skeleton::abstraction& abstraction, uint64_t abstraction_ID, bool& error_occured) {
         uint64_t variable_count;
 
         // determine variable count
@@ -636,8 +636,6 @@ namespace generator {
         write_instructions::write__create_new_context(workspace, 1);
         write_instructions::write__write_cell(workspace, workspace.p_abstraction_offsets[start_function_ID].p_start.p_instruction_ID, 0);
         write_instructions::write__jump_to_abstraction(workspace, 0);
-        write_instructions::write__write_cell(workspace, 123456, 0);
-        write_instructions::write__print_cell_as_number(workspace, 0);
         write_instructions::write__quit(workspace);
     }
 
@@ -661,7 +659,7 @@ namespace generator {
             // check if abstraction has scope
             if (skeleton.p_abstractions[abstraction_ID].p_has_scope) {
                 // turn into function
-                generate_abstraction(workspace, skeleton, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
+                generate_abstraction(workspace, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
 
                 // check error
                 if (error_occured) {
@@ -689,7 +687,7 @@ namespace generator {
             // check if abstraction has scope
             if (skeleton.p_abstractions[abstraction_ID].p_has_scope) {
                 // turn into function
-                generate_abstraction(workspace, skeleton, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
+                generate_abstraction(workspace, skeleton.p_abstractions[abstraction_ID], abstraction_ID, error_occured);
 
                 // check error
                 if (error_occured) {
