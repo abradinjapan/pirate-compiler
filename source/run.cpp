@@ -49,6 +49,7 @@ namespace runner {
         jump_to_abstraction,
         jump_from_abstraction,
         jump_to,
+        jump_if,
         get_instruction_index,
 
         // calculations
@@ -202,6 +203,17 @@ namespace runner {
             case instruction_type::jump_to:
                 // jump
                 current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0];
+
+                break;
+            case instruction_type::jump_if:
+                // if true
+                if (context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0] == 1) {
+                    // jump
+                    current_instruction = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1];
+                } else {
+                    // next instruction
+                    current_instruction++;
+                }
 
                 break;
             case instruction_type::get_instruction_index:

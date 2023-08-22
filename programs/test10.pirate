@@ -1,20 +1,19 @@
-abstraction(in)(out) = {
-    pirate.copy(in)(out)
-}
-
-add(a b)(c) = {
-    pirate.integer_add(a b)(c)
-}
-
 pirate.sail()() = {
-    pirate.write_cell(pirate.integer.879)(number)
-    abstraction(number)(number2)
-    add(number number2)(number3)
+    pirate.write_cell(pirate.integer.1)(increment)
+    pirate.write_cell(pirate.integer.0)(min)
+    pirate.copy(min)(current)
+    pirate.write_cell(pirate.integer.10)(max)
     pirate.write_cell(@offset)(o)
+    pirate.write_cell(pirate.integer.10)(new_line)
 
     @offset
 
-    pirate.print_cell_as_number(number3)()
+    pirate.print_cell_as_number(current)()
+    pirate.print_cell_as_character(new_line)()
 
-    pirate.jump_to(o)()
+    pirate.integer_add(current increment)(current)
+
+    pirate.integer_within_range(min current max)(within_range)
+
+    pirate.jump_if(within_range o)()
 }
