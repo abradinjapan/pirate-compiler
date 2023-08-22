@@ -53,6 +53,7 @@ namespace runner {
 
         // calculations
         integer_add,
+        integer_within_range,
     };
 
     class instruction {
@@ -61,6 +62,7 @@ namespace runner {
         cell p_write_register_value;
         cell_ID p_input_0;
         cell_ID p_input_1;
+        cell_ID p_input_2;
         cell_ID p_output_0;
 
         instruction() {
@@ -213,6 +215,14 @@ namespace runner {
             case instruction_type::integer_add:
                 // perform addition
                 context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0] + context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1];
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::integer_within_range:
+                // perform addition
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = (cell)(uint64_t)((context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1] >= context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]) && (context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1] <= context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_2]));
 
                 // next instruction
                 current_instruction++;

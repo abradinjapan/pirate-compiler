@@ -2,7 +2,32 @@ pi()(output) = {
     pirate.write_cell(pirate.integer.314)(output)
 }
 
+value()(value) = {
+    pirate.write_cell(pirate.integer.150)(value)
+}
+
+compare(value)(bool) = {
+    pirate.write_cell(pirate.integer.100)(low_bound)
+    pirate.write_cell(pirate.integer.200)(high_bound)
+    pirate.write_cell(pirate.integer.10)(new_line)
+
+    pirate.print_cell_as_number(low_bound)()
+    pirate.print_cell_as_character(new_line)()
+
+    pirate.print_cell_as_number(value)()
+    pirate.print_cell_as_character(new_line)()
+
+    pirate.print_cell_as_number(high_bound)()
+    pirate.print_cell_as_character(new_line)()
+
+    pirate.integer_within_range(low_bound value high_bound)(bool)
+
+    pirate.print_cell_as_number(bool)()
+    pirate.print_cell_as_character(new_line)()
+}
+
 pirate.sail()() = {
     pi()(pi)
-    pirate.print_cell_as_number(pi)()
+    value()(v)
+    compare(v)(bool)
 }

@@ -1,0 +1,20 @@
+abstraction(in)(out) = {
+    pirate.copy(in)(out)
+}
+
+add(a b)(c) = {
+    pirate.integer_add(a b)(c)
+}
+
+pirate.sail()() = {
+    pirate.write_cell(pirate.integer.879)(number)
+    abstraction(number)(number2)
+    add(number number2)(number3)
+    pirate.write_cell(@offset)(o)
+
+    @offset
+
+    pirate.print_cell_as_number(number3)()
+
+    pirate.jump_to(o)()
+}
