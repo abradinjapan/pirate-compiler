@@ -71,7 +71,7 @@ namespace accounter {
             // try to add a header
             if (headers.try_register_header(header(program.p_abstractions[i].p_header.p_name.p_name_value, program.p_abstractions[i].p_header.p_inputs.size(), program.p_abstractions[i].p_header.p_outputs.size())) == false) {
                 // error, header re-registered
-                std::cout << "Abstracting Error: Duplicate Header Found : " << program.p_abstractions[i].p_header.p_name.p_name_value << std::endl;
+                std::cout << "Blimey! A duplicate header error has forced our ship to careen! : " << program.p_abstractions[i].p_header.p_name.p_name_value << std::endl;
 
                 // set error
                 error_occured = true;
@@ -233,7 +233,7 @@ namespace accounter {
                 error_occured = true;
 
                 // inform user of failure
-                std::cout << "Accouting Error: Duplicate header argument: " << abstraction.p_header.p_inputs[input_ID].p_name_value << std::endl;
+                std::cout << "Ahoy matey! A bedoubled input argument was found in an abstraction header! : " << abstraction.p_header.p_inputs[input_ID].p_name_value << std::endl;
 
                 // return early
                 return output;
@@ -248,7 +248,7 @@ namespace accounter {
                 error_occured = true;
 
                 // inform user of failure
-                std::cout << "Accouting Error: Duplicate header argument: " << abstraction.p_header.p_outputs[output_ID].p_name_value << std::endl;
+                std::cout << "Ahoy matey! A bedoubled output argument was found in an abstraction header! : " << abstraction.p_header.p_outputs[output_ID].p_name_value << std::endl;
 
                 // return early
                 return output;
@@ -319,7 +319,7 @@ namespace accounter {
                     error_occured = true;
 
                     // announce error
-                    std::cout << "Accounting Error: Offset redeclared: " << abstraction.p_scope[statement_ID].p_name.p_name_value << std::endl;
+                    std::cout << "Ahoy matey! A bedoubled offset declaration was found in an abstraction! : " << abstraction.p_scope[statement_ID].p_name.p_name_value << std::endl;
 
                     // quit
                     return output;
@@ -385,7 +385,7 @@ namespace accounter {
                     // check for literal
                     if (abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_type == parser::name_type::is_integer_literal) {
                         // inform user of error
-                        std::cout << "Error: Integer literal found in abstraction call statement output: " << abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_value << std::endl;
+                        std::cout << "Blimey! An integer literal was found in abstraction call statement's output!: " << abstraction.p_scope[statement_ID].p_outputs[output_ID].p_name_value << std::endl;
                         
                         // set error
                         error_occured = true;
@@ -488,7 +488,7 @@ namespace accounter {
                 error_occured = true;
 
                 // inform user of error
-                std::cout << "Error: Variable not found from lookup: " << name_value << std::endl;
+                std::cout << "Ahoy! A wretched variable was not found during lookup!: " << name_value << std::endl;
 
                 // return invalid argument
                 return argument(argument_type::is_invalid, -1);
@@ -509,7 +509,7 @@ namespace accounter {
                 error_occured = true;
 
                 // inform user of error
-                std::cout << "Error: Offset not found during lookup: " << name << std::endl;
+                std::cout << "Ahoy! A wretched offset was not found during lookup! " << name << std::endl;
 
                 // return invalid argument
                 return argument(argument_type::is_invalid, -1);
@@ -529,7 +529,7 @@ namespace accounter {
                 error_occured = true;
 
                 // inform user of error
-                std::cout << "Error: Literal not found during lookup: [ " << statement_ID << " " << io_ID << " ]" << std::endl;
+                std::cout << "Ahoy! A wretched literal was not found during lookup! [ " << statement_ID << " " << io_ID << " ]" << std::endl;
 
                 // return invalid argument
                 return argument(argument_type::is_invalid, -1);
@@ -550,9 +550,9 @@ namespace accounter {
 
                 // verify header table
                 if (verify_all_headers(p_header_table, program) == true) {
-                    std::cout << "All headers and statements match correctly." << std::endl;
+                    std::cout << "Aye captain! All headers and statements match correctly." << std::endl;
                 } else {
-                    std::cout << "Error: Headers and statements do not match." << std::endl;
+                    std::cout << "Neigh captain: Headers and statements do not match." << std::endl;
                     error_occured = true;
 
                     return;
@@ -696,7 +696,7 @@ namespace accounter {
                 error_occured = true;
 
                 // inform user of error
-                std::cout << "Error: Header not found during lookup: " <<  header_name << std::endl;
+                std::cout << "Ahoy! A wretched header was not found during lookup! " <<  header_name << std::endl;
 
                 // return invalid argument
                 return -1;
@@ -760,7 +760,7 @@ namespace accounter {
                                 break;
                             // not valid
                             default:
-                                std::cout << "Error: Illegal name type in statement inputs." << std::endl;
+                                std::cout << "Ahoy! A wretched illegal name type was found in statement inputs!" << std::endl;
                                 return output;
                             }
                         }
@@ -782,7 +782,7 @@ namespace accounter {
                                 break;
                             // not valid
                             default:
-                                std::cout << "Error: Illegal name type in statement outputs." << std::endl;
+                                std::cout << "Ahoy! A wretched illegal name type was found in statement outputs!" << std::endl;
                                 return output;
                             }
                         }
@@ -819,7 +819,7 @@ namespace accounter {
 
                         error_occured = true;
 
-                        std::cout << "Error: Invalid statement type while creating map." << std::endl;
+                        std::cout << "Ahoy! A wretched illegal statement type was found while creating the statement treasure map!" << std::endl;
 
                         return output;
                     }

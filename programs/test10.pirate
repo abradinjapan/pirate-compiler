@@ -3,8 +3,8 @@ pirate.sail()() = {
     pirate.write_cell(pirate.integer.0)(min)
     pirate.copy(min)(current)
     pirate.write_cell(pirate.integer.10)(max)
-    pirate.write_cell(@offset)(o)
     pirate.write_cell(pirate.integer.10)(new_line)
+    pirate.write_cell(@offset)(o)
 
     @offset
 
