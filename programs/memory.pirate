@@ -1,0 +1,17 @@
+leak()(address) = {
+    pirate.write_cell(pirate.integer.100)(buffer_size)
+    pirate.write_cell(pirate.integer.10)(new_line)
+
+    pirate.request_memory(buffer_size)(buffer_address)
+
+    pirate.print_cell_as_number(buffer_address)()
+    pirate.print_cell_as_character(new_line)()
+
+    pirate.copy(buffer_address)(address)
+}
+
+pirate.sail()() = {
+    leak()(address)
+
+    pirate.return_memory(address)()
+}

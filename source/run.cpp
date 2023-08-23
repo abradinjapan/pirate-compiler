@@ -51,6 +51,8 @@ namespace runner {
         jump_to,
         jump_if,
         get_instruction_index,
+        request_memory,
+        return_memory,
 
         // calculations
         integer_add,
@@ -224,6 +226,22 @@ namespace runner {
                 current_instruction++;
 
                 break;
+            case instruction_type::request_memory:
+                // perform allocation
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = (uint64_t)malloc(context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::return_memory:
+                // return memory
+                free((void*)context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]);
+
+                // next instruction
+                current_instruction++;
+
+                break;
             case instruction_type::integer_add:
                 // perform addition
                 context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0] + context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1];
@@ -233,7 +251,7 @@ namespace runner {
 
                 break;
             case instruction_type::integer_within_range:
-                // perform addition
+                // perform range check
                 context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = (cell)(uint64_t)((context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1] >= context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0]) && (context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1] <= context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_2]));
 
                 // next instruction

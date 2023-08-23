@@ -344,6 +344,41 @@ namespace generator {
             workspace.p_instruction_count++;
         }
 
+        void write__request_memory(workspace& workspace, runner::cell_ID length, runner::cell_ID address) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::request_memory;
+                temp_instruction.p_input_0 = length;
+                temp_instruction.p_output_0 = address;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__return_memory(workspace& workspace, runner::cell_ID address) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::return_memory;
+                temp_instruction.p_input_0 = address;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
         void write__integer_add(workspace& workspace, runner::cell_ID source_1, runner::cell_ID source_2, runner::cell_ID destination) {
             runner::instruction temp_instruction;
 
@@ -574,6 +609,18 @@ namespace generator {
                 case runner::instruction_type::get_instruction_index:
                     // write code
                     write_instructions::write__get_instruction_index(workspace, calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0], abstraction));
+
+                    break;
+                // pirate.request_memory(1)(1)
+                case runner::instruction_type::request_memory:
+                    // write code
+                    write_instructions::write__request_memory(workspace, calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0], abstraction), calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0], abstraction));
+
+                    break;
+                // pirate.return_memory(1)(0)
+                case runner::instruction_type::return_memory:
+                    // write code
+                    write_instructions::write__return_memory(workspace, calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0], abstraction));
 
                     break;
                 // pirate.integer_add(2)(1)
