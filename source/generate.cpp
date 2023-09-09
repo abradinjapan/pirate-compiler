@@ -39,7 +39,7 @@ namespace generator {
 
         void start_pass_measure(uint64_t abstraction_count) {
             // DEBUG
-            std::cout << "Starting pass measure, abstraction count: " << abstraction_count << std::endl;
+            //std::cout << "Starting pass measure, abstraction count: " << abstraction_count << std::endl;
 
             p_abstraction_offsets.resize(abstraction_count);
             p_pass_type = pass_type::pass_measure;
@@ -48,14 +48,14 @@ namespace generator {
 
         void finish_pass_measure() {
             // DEBUG
-            std::cout << "Finishing pass measure." << std::endl;
+            //std::cout << "Finishing pass measure." << std::endl;
 
             p_program.p_instructions.resize(p_instruction_count);
         }
 
         void start_pass_build() {
             // DEBUG
-            std::cout << "Starting pass build." << std::endl;
+            //std::cout << "Starting pass build." << std::endl;
 
             p_instruction_count = 0;
             p_pass_type = pass_type::pass_build;
@@ -63,7 +63,7 @@ namespace generator {
 
         void finish_pass_build() {
             // DEBUG
-            std::cout << "Finishing pass build." << std::endl;
+            //std::cout << "Finishing pass build." << std::endl;
         }
 
         uint64_t get_offset() {
@@ -455,9 +455,9 @@ namespace generator {
             // setup function start offset
             workspace.p_abstraction_offsets[abstraction_ID].p_start = workspace.get_offset();
         // DEBUG
-        } else {
+        }/* else {
             std::cout << "Offset Count: " << workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets.size() << std::endl;
-        }
+        }*/
 
         // generate function prologue
         // create context
@@ -495,7 +495,7 @@ namespace generator {
                         // if pass is build
                         } else {
                             // DEBUG
-                            std::cout << "Offset ID #" << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID << std::endl;
+                            //std::cout << "Offset ID #" << abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID << std::endl;
 
                             // constant is an offset, write code
                             write_instructions::write__write_cell(workspace, workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets[abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0].p_ID].p_instruction_ID, calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0], abstraction));
@@ -657,7 +657,7 @@ namespace generator {
                 // define offset
                 if (workspace.p_pass_type == pass_type::pass_measure) {
                     // DEBUG
-                    std::cout << "Defined abstraction offset #" << abstraction.p_statement_map[statement_ID].p_ID << " at instruction #" << workspace.get_offset() << std::endl;
+                    //std::cout << "Defined abstraction offset #" << abstraction.p_statement_map[statement_ID].p_ID << " at instruction #" << workspace.get_offset() << std::endl;
 
                     // write offset
                     workspace.p_abstraction_offsets[abstraction_ID].p_code_defined_offsets[abstraction.p_statement_map[statement_ID].p_ID].p_instruction_ID = workspace.get_offset();

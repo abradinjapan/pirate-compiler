@@ -15,7 +15,7 @@ std::string load_file(std::string file_path) {
     return content;
 }
 
-runner::program compile(std::string user_code, bool& compilation_error) {
+runner::program compile(std::string user_code, bool& compilation_error, bool print_debug) {
     runner::program output;
     lexer::lexlings lexlings;
     parser::program parse_tree;
@@ -25,16 +25,15 @@ runner::program compile(std::string user_code, bool& compilation_error) {
     bool accounting_error = false;
     bool generation_error = false;
 
-    // print original file
-    std::cout << "Original File:" << std::endl << user_code << std::endl;
-
     // lex file
     lexlings = lexer::lex(user_code, lex_error);
 
     // print lexlings
-    std::cout << "Lexlings:" << std::endl;
-    for (unsigned int i = 0; i < lexlings.p_lexlings.size(); i++) {
-        std::cout << "\tType: " << lexlings.p_lexlings[i].p_type << " Value: " << lexlings.p_lexlings[i].p_value << std::endl;
+    if (print_debug) {
+        std::cout << "Lexlings:" << std::endl;
+        for (unsigned int i = 0; i < lexlings.p_lexlings.size(); i++) {
+            std::cout << "\tType: " << lexlings.p_lexlings[i].p_type << " Value: " << lexlings.p_lexlings[i].p_value << std::endl;
+        }
     }
 
     // do not proceed if error occured
@@ -48,7 +47,9 @@ runner::program compile(std::string user_code, bool& compilation_error) {
     parse_tree = parser::parse_file(lexlings, parse_error);
 
     // print parse tree
-    parser::print_program(parse_tree);
+    if (print_debug) {
+        parser::print_program(parse_tree);
+    }
 
     // do not proceed if error occured
     if (parse_error) {
@@ -61,7 +62,9 @@ runner::program compile(std::string user_code, bool& compilation_error) {
     skeleton.get_skeleton(parse_tree, accounting_error);
 
     // print program
-    skeleton.print_skeleton();
+    if (print_debug) {
+        skeleton.print_skeleton();
+    }
 
     // do not proceed if error occured
     if (accounting_error) {
@@ -81,7 +84,9 @@ runner::program compile(std::string user_code, bool& compilation_error) {
     }
 
     // print code
-    print_program(output);
+    if (print_debug) {
+        print_program(output);
+    }
 
     return output;
 }
@@ -91,8 +96,14 @@ void compile_and_run(std::string user_code) {
     bool compilation_error = false;
     bool run_time_error = false;
 
+    // inform user of compilation start
+    std::cout << "\n\n\n----------\n" << "Ahoy! Code is about to be compiled!" << std::endl;
+
+    // print original file
+    std::cout << "Original File:" << std::endl << user_code << std::endl;
+
     // compile program
-    program = compile(user_code, compilation_error);
+    program = compile(user_code, compilation_error, false);
 
     // run if no errors occured
     if (compilation_error == false) {
@@ -101,9 +112,15 @@ void compile_and_run(std::string user_code) {
 
         // run code
         runner::run_program(program, run_time_error);
+
+        // inform user of program end
+        std::cout << std::endl << "Ending program..." << std::endl;
     } else {
         std::cout << "Code not run, compilation error." << std::endl;
     }
+
+    // close in display area
+    std::cout << "----------" << std::endl;
 }
 
 int main() {

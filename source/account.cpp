@@ -549,9 +549,7 @@ namespace accounter {
                 get_header_table(program, p_header_table, error_occured);
 
                 // verify header table
-                if (verify_all_headers(p_header_table, program) == true) {
-                    std::cout << "Aye captain! All headers and statements match correctly." << std::endl;
-                } else {
+                if (verify_all_headers(p_header_table, program) == false) {
                     std::cout << "Neigh captain: Headers and statements do not match." << std::endl;
                     error_occured = true;
 
