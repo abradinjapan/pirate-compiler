@@ -15,6 +15,44 @@ leak()(address) = {
     pirate.copy(buffer_address)(address)
 }
 
+[ print a new line ]
+print.new_line()() = {
+    [ write new line character ]
+    pirate.write_cell(pirate.integer.10)(new_line_character)
+
+    [ print new line character ]
+    pirate.print_cell_as_character(new_line_character)()
+}
+
+[ test buffer functions ]
+test_buffer()() = {
+    [ setup variables ]
+    pirate.write_cell(pirate.integer.100)(value.1)
+    pirate.write_cell(pirate.integer.123)(value.2)
+    pirate.write_cell(pirate.integer.8)(write_size)
+    pirate.write_cell(pirate.integer.80)(buffer_size)
+
+    [ allocate buffer ]
+    pirate.request_memory(buffer_size)(buffer_address)
+
+    [ write data from cell to buffer]
+    pirate.cell_to_address(value.1 write_size buffer_address)()
+
+    [ print value 2 ]
+    pirate.print_cell_as_number(value.2)()
+    print.new_line()()
+
+    [ overwrite data in buffer to value 2 ]
+    pirate.address_to_cell(buffer_address write_size)(value.2)
+
+    [ print value 2 ]
+    pirate.print_cell_as_number(value.2)()
+    print.new_line()()
+
+    [ clean up buffer ]
+    pirate.return_memory(buffer_address)()
+}
+
 [ entry point ]
 pirate.sail()() = {
     [ leak ]
@@ -22,4 +60,7 @@ pirate.sail()() = {
 
     [ clean up leak ]
     pirate.return_memory(address)()
+
+    [ next test ]
+    test_buffer()()
 }

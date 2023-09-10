@@ -379,6 +379,44 @@ namespace generator {
             workspace.p_instruction_count++;
         }
 
+        void write__cell_to_address(workspace& workspace, runner::cell_ID source, runner::cell_ID byte_size, runner::cell_ID destination) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::cell_to_address;
+                temp_instruction.p_input_0 = source;
+                temp_instruction.p_input_1 = byte_size;
+                temp_instruction.p_input_2 = destination;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
+        void write__address_to_cell(workspace& workspace, runner::cell_ID source, runner::cell_ID byte_size, runner::cell_ID destination) {
+            runner::instruction temp_instruction;
+
+            // create instruction
+            if (workspace.p_pass_type == pass_type::pass_build) {
+                // set type
+                temp_instruction.p_type = runner::instruction_type::address_to_cell;
+                temp_instruction.p_input_0 = source;
+                temp_instruction.p_input_1 = byte_size;
+                temp_instruction.p_output_0 = destination;
+
+                // write instruction
+                workspace.p_program.p_instructions[workspace.p_instruction_count] = temp_instruction;
+            }
+
+            // next instruction
+            workspace.p_instruction_count++;
+        }
+
         void write__integer_add(workspace& workspace, runner::cell_ID source_1, runner::cell_ID source_2, runner::cell_ID destination) {
             runner::instruction temp_instruction;
 
@@ -621,6 +659,18 @@ namespace generator {
                 case runner::instruction_type::return_memory:
                     // write code
                     write_instructions::write__return_memory(workspace, calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0], abstraction));
+
+                    break;
+                // pirate.cell_to_address(3)(0)
+                case runner::instruction_type::cell_to_address:
+                    // write code
+                    write_instructions::write__cell_to_address(workspace, calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0], abstraction), calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[1], abstraction), calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[2], abstraction));
+
+                    break;
+                // pirate.address_to_cell(2)(1)
+                case runner::instruction_type::address_to_cell:
+                    // write code
+                    write_instructions::write__address_to_cell(workspace, calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[0], abstraction), calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_inputs[1], abstraction), calculate_variable_index(abstraction.p_calls[abstraction.p_statement_map[statement_ID].p_ID].p_outputs[0], abstraction));
 
                     break;
                 // pirate.integer_add(2)(1)

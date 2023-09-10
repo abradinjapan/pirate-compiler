@@ -677,6 +677,8 @@ namespace accounter {
                 synthesize_header_only_abstraction("pirate.get_instruction_index", 0, 1);
                 synthesize_header_only_abstraction("pirate.request_memory", 1, 1);
                 synthesize_header_only_abstraction("pirate.return_memory", 1, 0);
+                synthesize_header_only_abstraction("pirate.cell_to_address", 3, 0);
+                synthesize_header_only_abstraction("pirate.address_to_cell", 2, 1);
                 synthesize_header_only_abstraction("pirate.integer_add", 2, 1);
                 synthesize_header_only_abstraction("pirate.integer_within_range", 3, 1);
             }

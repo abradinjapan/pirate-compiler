@@ -8,6 +8,35 @@ namespace runner {
     // defines
     typedef uint64_t cell; // register
     typedef uint64_t cell_ID;
+    typedef void* address;
+
+    // read buffer
+    uint64_t read_buffer(address source, uint64_t byte_amount) {
+        uint64_t output;
+
+        // setup output
+        output = 0;
+
+        // read buffer
+        for (uint64_t byte_index = 0; byte_index < byte_amount; byte_index += 1) {
+            // get byte
+            ((uint8_t*)&output)[byte_index] = ((uint8_t*)source)[byte_index];
+        }
+
+        // return output
+        return output;
+    }
+
+    // write buffer
+    void write_buffer(uint64_t source, uint64_t byte_amount, address destination) {
+        // write data to buffer
+        for (uint64_t byte_index = 0; byte_index < byte_amount; byte_index += 1) {
+            // write byte
+            ((uint8_t*)destination)[byte_index] = ((uint8_t*)&source)[byte_index];
+        }
+        
+        return;
+    }
 
     class buffer {
     public:
@@ -53,6 +82,8 @@ namespace runner {
         get_instruction_index,
         request_memory,
         return_memory,
+        cell_to_address,
+        address_to_cell,
 
         // calculations
         integer_add,
@@ -241,6 +272,22 @@ namespace runner {
                 // next instruction
                 current_instruction++;
 
+                break;
+            case instruction_type::cell_to_address:
+                // do write
+                write_buffer(context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0], context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1], (address)context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_2]);
+
+                // next instruction
+                current_instruction++;
+
+                break;
+            case instruction_type::address_to_cell:
+                // do write
+                context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_output_0] = read_buffer((address)context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_0], context_stack[context_stack.size() - 1].p_cells.p_cells[program.p_instructions[current_instruction].p_input_1]);
+
+                // next instruction
+                current_instruction++;
+                
                 break;
             case instruction_type::integer_add:
                 // perform addition
