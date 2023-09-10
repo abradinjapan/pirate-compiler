@@ -29,6 +29,7 @@ Here is an example function to show the syntax of instructions, comments, offset
 > [ abstraction call ] abstraction_call(blah)(blah)
 >
 > [ offset ] @offset.name
+>
 > \}
 
 The main function in pirate language is a function call pirate.sail()().
