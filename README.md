@@ -23,6 +23,7 @@ Here is an example function to show the syntax of instructions, comments, offset
 > [ this is a comment ]
 >
 > abstraction(input.1)(output.1) = \{
+>
 > [ instruction ] instruction(blah)(blah)
 >
 > [ abstraction call ] abstraction_call(blah)(blah)
