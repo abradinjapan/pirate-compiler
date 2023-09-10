@@ -132,6 +132,7 @@ int main() {
     compile_and_run(load_file("programs/test9.pirate"));
     compile_and_run(load_file("programs/test10.pirate"));
     compile_and_run(load_file("programs/memory.pirate"));
+    compile_and_run(load_file("programs/print.pirate"));
 
     // test runner
     //test_runner::test_runner();

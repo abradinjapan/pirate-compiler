@@ -1,0 +1,12 @@
+[ print a new line ]
+print.new_line()() = {
+    [ set variable ]
+    pirate.write_cell(pirate.integer.10)(new_line_character)
+
+    [ perform print ]
+    pirate.print_cell_as_character(new_line_character)()
+}
+
+pirate.sail()() = {
+    print.new_line()()
+}

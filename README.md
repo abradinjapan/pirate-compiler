@@ -2,7 +2,7 @@
 
 A pirate themed programming language.
 
-# How To
+# Tutorial
 
 The main function in pirate language is a function call pirate.sail()().
 

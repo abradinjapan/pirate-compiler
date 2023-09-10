@@ -63,6 +63,7 @@ namespace lexer {
     lexlings lex(std::string user_code, bool& error_occured) {
         lexlings output;
         unsigned int index;
+        unsigned int comment_depth;
         int length;
 
         // setup variables
@@ -71,10 +72,38 @@ namespace lexer {
 
         // get lexlings
         while (index < user_code.length()) {
+            // set comment depth
+            comment_depth = 0;
+
             // absorb whitespace
-            while (index < user_code.length() && (user_code[index] == ' ' || user_code[index] == '\n' || user_code[index] == '\r' || user_code[index] == '\t')) {
-                // next index
-                index++;
+            while (index < user_code.length() && (user_code[index] == ' ' || user_code[index] == '\n' || user_code[index] == '\r' || user_code[index] == '\t' || user_code[index] == '[')) {
+                // if comment
+                if (user_code[index] == '[') {
+                    // run through characters
+                    while (index < user_code.length()) {
+                        // increase comment depth
+                        if (user_code[index] == '[') {
+                            comment_depth++;
+                        }
+
+                        // decrease comment depth
+                        if (user_code[index] == ']') {
+                            comment_depth--;
+                        }
+
+                        // next character
+                        index++;
+
+                        // check for comment end
+                        if (comment_depth == 0) {
+                            break;
+                        }
+                    }
+                // if normal whitespace
+                } else {
+                    // next index
+                    index++;
+                }
             }
 
             // set lexling length
