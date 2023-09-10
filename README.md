@@ -24,19 +24,19 @@ Here is an example function to show the syntax of instructions, comments, offset
 >
 > abstraction(input.1)(output.1) = \{
 >
->     [ instruction ]
+> [ instruction ]
 >
->     instruction(blah)(blah)
->
->
->     [ abstraction call ]
->
->     abstraction_call(blah)(blah)
+> instruction(blah)(blah)
 >
 >
->     [ offset ]
+> [ abstraction call ]
 >
->     @offset.name
+> abstraction_call(blah)(blah)
+>
+>
+> [ offset ]
+>
+> @offset.name
 > \}
 
 The main function in pirate language is a function call pirate.sail()().
