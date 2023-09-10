@@ -24,11 +24,11 @@ Here is an example function to show the syntax of instructions, comments, offset
 >
 > abstraction(input.1)(output.1) = \{
 >
-> [ instruction ] instruction(blah)(blah)
+> instruction(blah)(blah)
 >
-> [ abstraction call ] abstraction_call(blah)(blah)
+> abstraction_call(blah)(blah)
 >
-> [ offset ] @offset.name
+> @offset.name
 >
 > \}
 
