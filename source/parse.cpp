@@ -255,8 +255,11 @@ namespace parser {
 
             // next lexling
             lexling_index += 2;
+        /*// get string literal
+        } else if (lexlings.p_lexlings[lexling_index].p_type == lexer::type::string_literal) {
+            
         // error
-        } else {
+        */} else {
             // mark type
             output.p_type = statement_type::is_not_valid;
 

@@ -38,6 +38,80 @@ namespace runner {
         return;
     }
 
+    // create buffer from file
+    address move_file_to_buffer(address null_terminated_file_name, uint64_t* output_length) {
+        address output;
+        FILE* file_handle;
+        uint64_t file_size;
+
+        // open file
+        file_handle = fopen((const char*)null_terminated_file_name, "rb");
+
+        // check if the file opened
+        if (file_handle == 0) {
+            // if not, return empty buffer
+            return 0;
+        }
+
+        // get file size
+        fseek(file_handle, 0, SEEK_END);
+        file_size = ftell(file_handle);
+        fseek(file_handle, 0, SEEK_SET);
+
+        // allocate buffer
+        output = malloc(file_size);
+
+        // check if buffer allocated
+        if (output == 0) {
+            // close file handle
+            fclose(file_handle);
+
+            // return empty buffer
+            *output_length = 0;
+
+            return output;
+        }
+
+        // read file into buffer
+        fread(output, file_size, 1, file_handle);
+
+        // close file handle
+        fclose(file_handle);
+
+        // return buffer
+        *output_length = file_size;
+
+        return output;
+    }
+
+    // create file from buffer
+    void move_buffer_to_file(bool* error, address null_terminated_file_name, address data, uint64_t length) {
+        FILE* file_handle;
+
+        // setup error to no error to start
+        *error = false;
+
+        // open file
+        file_handle = fopen((const char*)null_terminated_file_name, "w+b");
+
+        // check if the file opened
+        if (file_handle == 0) {
+            // if not, return error
+            *error = true;
+
+            return;
+        }
+
+        // write buffer to file
+        fwrite(data, length, 1, file_handle);
+
+        // close file handle
+        fclose(file_handle);
+
+        // return
+        return;
+    }
+
     class buffer {
     public:
         std::vector<cell> p_cells;
@@ -62,8 +136,8 @@ namespace runner {
         }
     };
 
+    // instructions
     enum instruction_type {
-        // generic
         quit,
         write_cell,
         copy_cell,
@@ -84,8 +158,8 @@ namespace runner {
         return_memory,
         cell_to_address,
         address_to_cell,
-
-        // calculations
+        //buffer_to_file,
+        //file_to_buffer,
         integer_add,
         integer_within_range,
     };
@@ -104,6 +178,7 @@ namespace runner {
             p_write_register_value = 0;
             p_input_0 = 0;
             p_input_1 = 0;
+            p_input_2 = 0;
             p_output_0 = 0;
         }
     };

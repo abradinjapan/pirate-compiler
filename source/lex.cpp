@@ -10,6 +10,7 @@ namespace lexer {
     enum type {
         no_type,
         name,
+        string_literal,
         left_parenthesis,
         right_parenthesis,
         left_curly_bracket,
@@ -64,6 +65,8 @@ namespace lexer {
         lexlings output;
         unsigned int index;
         unsigned int comment_depth;
+        unsigned int string_depth;
+        unsigned int string_start;
         int length;
 
         // setup variables
@@ -167,6 +170,46 @@ namespace lexer {
                 } else if (user_code[index] == '=') {
                     // add lexling
                     output.p_lexlings.push_back(lexling(type::abstraction_marker, "="));
+
+                    // next index
+                    index++;
+                // check for string
+                } else if (user_code[index] == '\"' && user_code[index + 1] == '\'') {
+                    // setup string start
+                    string_start = index;
+
+                    // setup string depth
+                    string_depth = 1;
+
+                    // skip past already read characters
+                    index += 2;
+
+                    // get string
+                    while (string_depth > 0) {
+                        // check for string opener
+                        if (user_code[index] == '"' && user_code[index + 1] == '\'') {
+                            // increase string depth
+                            string_depth++;
+
+                            // next character
+                            index++;
+                        }
+
+                        // check for string closer
+                        if (user_code[index] == '\'' && user_code[index + 1] == '"') {
+                            // decrease string depth
+                            string_depth--;
+
+                            // next character
+                            index++;
+                        }
+
+                        // next index
+                        index++;
+                    }
+
+                    // push back string
+                    output.p_lexlings.push_back(lexling(type::string_literal, user_code.substr(string_start + 2, (index - 2) - (string_start + 2))));
 
                     // next index
                     index++;

@@ -1,0 +1,5 @@
+[ A possible implementation of strings. ]
+string_example()() = {
+    [ string ]
+    pirate.string("'Inner text.'")(string.address string.length)
+}
